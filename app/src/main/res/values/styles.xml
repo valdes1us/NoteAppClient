@@ -1,15 +1,7 @@
 <resources>
     <!-- Базовая тема приложения -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Цвет статус-бара -->
-        <item name="colorPrimaryDark">#2e2e2e</item>
-        <!-- Цвет Toolbar -->
-        <item name="colorPrimary">#2e2e2e</item>
-        <!-- Убрать ActionBar -->
-        <item name="android:windowActionBar">false</item>
-        <item name="android:windowNoTitle">true</item>
-        <!-- Сделать статус-бар прозрачным, чтобы применился цвет -->
-        <item name="android:statusBarColor">#2e2e2e</item>
-        <item name="android:windowLightStatusBar">false</item> <!-- Белый текст на статус-баре -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here -->
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>

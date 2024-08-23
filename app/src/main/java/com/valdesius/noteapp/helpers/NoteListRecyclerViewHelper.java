@@ -16,45 +16,41 @@ import com.valdesius.noteapp.models.Note;
 
 import java.util.List;
 
-public class NoteListRecyclerViewHelper extends RecyclerView.Adapter<NoteListRecyclerViewHelper.NoteListViewHolder> {
-    private List<Note> noteListItems;
+public class NoteListRecyclerViewHelper extends RecyclerView.Adapter<NoteListRecyclerViewHelper.NoteViewHolder> {
+    private List<Note> noteList;
     private Context context;
 
-    public NoteListRecyclerViewHelper(List<Note> noteListItems, Context context) {
-        this.noteListItems = noteListItems;
+    public NoteListRecyclerViewHelper(List<Note> noteList, Context context) {
+        this.noteList = noteList;
         this.context = context;
     }
 
-    @NonNull
     @Override
-    public NoteListViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.note_list, parent, false);
-        return new NoteListViewHolder(v);
+    public NoteViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.note_list, parent, false);
+        return new NoteViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull NoteListViewHolder holder, int position) {
-        Note note = this.noteListItems.get(position);
-
-        holder.noteTitle.setText(note.getTitle());
-        holder.noteBody.setText(note.getBody());
-
+    public void onBindViewHolder(NoteViewHolder holder, int position) {
+        Note note = noteList.get(position);
+        holder.titleTextView.setText(note.getTitle());
+        holder.contentTextView.setText(note.getBody());
     }
 
     @Override
     public int getItemCount() {
-        return noteListItems.size();
+        return noteList.size();
     }
 
-    public class NoteListViewHolder extends RecyclerView.ViewHolder {
-        public TextView noteTitle, noteBody;
-        private LinearLayout noteItemLayout;
+    class NoteViewHolder extends RecyclerView.ViewHolder {
+        TextView titleTextView;
+        TextView contentTextView;
 
-        public NoteListViewHolder(@NonNull View itemView) {
+        public NoteViewHolder(View itemView) {
             super(itemView);
-            noteTitle = itemView.findViewById(R.id.note_title);
-            noteBody = itemView.findViewById(R.id.note_body);
+            titleTextView = itemView.findViewById(R.id.note_title);
+            contentTextView = itemView.findViewById(R.id.note_body);
         }
     }
 }

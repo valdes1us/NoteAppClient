@@ -3,17 +3,17 @@ package com.valdesius.noteapp.models;
 public class Note {
     private int note_id;
     private String title;
-    private String body;
+    private String content;
 
     public Note(int note_id, String title, String body) {
         this.note_id = note_id;
         this.title = title;
-        this.body = body;
+        this.content = body;
     }
 
     public Note(String title, String body) {
         this.title = title;
-        this.body = body;
+        this.content = body;
     }
 
     public int getNote_id() {
@@ -33,10 +33,10 @@ public class Note {
     }
 
     public String getBody() {
-        return body;
+        return content;
     }
 
     public void setBody(String body) {
-        this.body = body;
+        this.content = body;
     }
 }
