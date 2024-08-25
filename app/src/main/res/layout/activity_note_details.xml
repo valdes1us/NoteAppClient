@@ -18,6 +18,17 @@
         android:title="Создать заметку"
         android:titleTextColor="#FFFFFF" />
 
+    <EditText
+        android:id="@+id/editText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/toolbar"
+        android:layout_margin="16dp"
+        android:background="@android:color/transparent"
+        android:hint="Введите текст"
+        android:padding="16dp"
+        android:textColor="#FFFFFF"
+        android:textColorHint="#CCCCCC"
+        style="@style/CustomEditText" />
 
-
-    </RelativeLayout>
+</RelativeLayout>

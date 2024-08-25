@@ -1,14 +1,17 @@
 package com.valdesius.noteapp;
 
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.graphics.Insets;
+import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -52,8 +55,7 @@ public class MainActivity extends AppCompatActivity {
         // Настройка Toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("Заметки");
-        toolbar.setNavigationIcon(R.drawable.note); // Установка иконки
+
 
         // Обработка системных отступов
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -64,6 +66,22 @@ public class MainActivity extends AppCompatActivity {
 
         // Установка цвета статус бара
         getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
+
+
+// Убираем отступы
+        for (int i = 0; i < toolbar.getChildCount(); i++) {
+            View child = toolbar.getChildAt(i);
+            if (child instanceof TextView) {
+                TextView title = (TextView) child;
+                title.setPadding(0, 0, 0, 0);
+                title.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+                break;
+            }
+        }
+
+        toolbar.setContentInsetsRelative(0, 0);
+        toolbar.setContentInsetsAbsolute(0, 0);
+
 
         // Инициализация RecyclerView и списка заметок
         noteRecyclerView = findViewById(R.id.note_list_recycler_view);

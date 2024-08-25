@@ -1,0 +1,6 @@
+<!-- res/values/edittext_style.xml -->
+<resources>
+    <style name="CustomEditText" parent="Widget.AppCompat.EditText">
+        <item name="colorControlHighlight">@color/blue</item> <!-- Цвет подсветки курсора -->
+    </style>
+</resources>
