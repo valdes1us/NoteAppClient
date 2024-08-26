@@ -14,21 +14,63 @@
         android:layout_height="wrap_content"
         android:background="#2e2e2e"
         android:elevation="4dp"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        android:title="Создать заметку"
-        android:titleTextColor="#FFFFFF" />
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+        <!-- Контейнер для кнопки и заголовка -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Кнопка "Назад" -->
+            <ImageView
+                android:id="@+id/back_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/an"
+            android:contentDescription="Назад"
+            android:padding="0dp" />
+
+            <!-- Поле ввода заголовка -->
+            <EditText
+                android:id="@+id/toolbarTitleEditText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="Название заметки"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#CCCCCC"
+                android:background="@android:color/transparent"
+                style="@style/CustomEditText"/>
+        </LinearLayout>
+    </androidx.appcompat.widget.Toolbar>
 
     <EditText
-        android:id="@+id/editText"
+        android:id="@+id/titleEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/toolbar"
-        android:layout_margin="16dp"
+        android:layout_margin="5dp"
+        android:background="@android:color/transparent"
+        android:hint="Название"
+        android:padding="16dp"
+        android:textColor="#FFFFFF"
+        android:textColorHint="#CCCCCC"
+        style="@style/CustomEditText"
+        android:visibility="gone"/>
+
+    <EditText
+        android:id="@+id/contentEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/titleEditText"
+        android:layout_margin="5dp"
         android:background="@android:color/transparent"
         android:hint="Введите текст"
         android:padding="16dp"
         android:textColor="#FFFFFF"
         android:textColorHint="#CCCCCC"
-        style="@style/CustomEditText" />
-
+        style="@style/CustomEditText"/>
 </RelativeLayout>

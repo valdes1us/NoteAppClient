@@ -19,29 +19,24 @@ public class SplashScreenActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark2));
-        // Получаем SharedPreferences
+
         SharedPreferences preferences = getSharedPreferences("app_preferences", MODE_PRIVATE);
         boolean isFirstLaunch = preferences.getBoolean("isFirstLaunch", true);
 
         if (isFirstLaunch) {
-            // Показываем сплэш-скрин
             setContentView(R.layout.activity_splash_screen);
 
-            // Сохраняем, что сплэш-скрин был показан
             SharedPreferences.Editor editor = preferences.edit();
             editor.putBoolean("isFirstLaunch", false);
             editor.apply();
 
-            // Ожидаем некоторое время и переходим на основной экран
-
+            startButton = findViewById(R.id.startButton);
+            goToMainActivity();
 
         } else {
-            // Сплэш-скрин был уже показан, сразу переходим на основной экран
             startActivity(new Intent(SplashScreenActivity.this, MainActivity.class));
             finish();
         }
-        startButton = findViewById(R.id.startButton);
-        goToMainActivity();
     }
 
     private void goToMainActivity() {
@@ -50,6 +45,7 @@ public class SplashScreenActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Intent intent = new Intent(SplashScreenActivity.this, MainActivity.class);
                 startActivity(intent);
+                finish(); // Завершаем текущую активность после перехода на MainActivity
             }
         });
     }

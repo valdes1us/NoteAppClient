@@ -11,6 +11,10 @@ public class Note {
         this.content = body;
     }
 
+    public Note() {
+
+    }
+
     public Note(String title, String body) {
         this.title = title;
         this.content = body;

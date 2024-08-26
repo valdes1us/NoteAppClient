@@ -11,6 +11,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.valdesius.noteapp.MainActivity;
+import com.valdesius.noteapp.NoteDetailsActivity;
 import com.valdesius.noteapp.R;
 import com.valdesius.noteapp.models.Note;
 
@@ -19,6 +21,7 @@ import java.util.List;
 public class NoteListRecyclerViewHelper extends RecyclerView.Adapter<NoteListRecyclerViewHelper.NoteViewHolder> {
     private List<Note> noteList;
     private Context context;
+
 
     public NoteListRecyclerViewHelper(List<Note> noteList, Context context) {
         this.noteList = noteList;
@@ -36,7 +39,21 @@ public class NoteListRecyclerViewHelper extends RecyclerView.Adapter<NoteListRec
         Note note = noteList.get(position);
         holder.titleTextView.setText(note.getTitle());
         holder.contentTextView.setText(note.getBody());
+
+        // Обработка клика на элементе списка
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(context, NoteDetailsActivity.class);
+                intent.putExtra("note_id", note.getNote_id());
+                intent.putExtra("title", note.getTitle());
+                intent.putExtra("content", note.getBody());
+
+                ((MainActivity) context).startActivityForResult(intent, MainActivity.EDIT_NOTE_REQUEST); // Код для редактирования заметки
+            }
+        });
     }
+
 
     @Override
     public int getItemCount() {

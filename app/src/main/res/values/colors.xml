@@ -4,7 +4,9 @@
     <color name="white">#FFFFFFFF</color>
     <color name="colorPrimaryDark">#2e2e2e</color>
     <color name="colorPrimaryDark2">#161616</color>
+    <color name="colorPrimaryDark3">#1f1f1f</color>
     <color name="blue">#239EFF</color>
     <color name="colorCursor">#0000FF</color> <!-- Цвет курсора -->
     <color name="colorHighlight">#0000FF</color> <!-- Цвет выделения текста -->
+    <color name="red">#560319</color>
 </resources>
