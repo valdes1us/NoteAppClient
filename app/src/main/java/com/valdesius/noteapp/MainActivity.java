@@ -14,6 +14,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -28,6 +29,7 @@ import com.valdesius.noteapp.helpers.NoteListRecyclerViewHelper;
 import com.valdesius.noteapp.models.Note;
 import com.valdesius.noteapp.models.NoteApi;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -44,9 +46,11 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView noteRecyclerView;
     private NoteListRecyclerViewHelper noteListAdapter;
     private List<Note> noteList;
+    private List<Note> filteredNoteList;
     private Retrofit retrofit;
     private NoteApi noteApi;
     private FloatingActionButton createNoteButton;
+    private SearchView searchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +74,22 @@ public class MainActivity extends AppCompatActivity {
         // Инициализация RecyclerView и списка заметок
         noteRecyclerView = findViewById(R.id.note_list_recycler_view);
         noteRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        searchView = findViewById(R.id.search_view);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false; // Можно оставить пустым, если не используем отправку
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filterNotes(newText);
+                return true;
+            }
+        });
+
+
 
         // Настройка Retrofit
         retrofit = new Retrofit.Builder()
@@ -138,6 +158,20 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void filterNotes(String query) {
+        if (query.isEmpty()) {
+            filteredNoteList = noteList; // Если строка поиска пуста, показываем все заметки
+        } else {
+            filteredNoteList = new ArrayList<>();
+            for (Note note : noteList) {
+                if (note.getTitle().toLowerCase().contains(query.toLowerCase()) ||
+                        note.getBody().toLowerCase().contains(query.toLowerCase())) {
+                    filteredNoteList.add(note);
+                }
+            }
+        }
+        noteListAdapter.updateNoteList(filteredNoteList);
+    }
     private void loadNotesFromServer() {
         Call<List<Note>> call = noteApi.getAllNotes();
         call.enqueue(new Callback<List<Note>>() {

@@ -77,11 +77,9 @@ public class NoteDetailsActivity extends AppCompatActivity {
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(NoteDetailsActivity.this, MainActivity.class);
-                startActivity(intent);
+                onBackPressed(); // Вызываем onBackPressed для сохранения заметки перед возвратом
             }
         });
-
     }
 
     private void saveNote() {

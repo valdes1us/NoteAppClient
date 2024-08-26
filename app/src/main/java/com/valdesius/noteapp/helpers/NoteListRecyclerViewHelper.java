@@ -27,6 +27,10 @@ public class NoteListRecyclerViewHelper extends RecyclerView.Adapter<NoteListRec
         this.noteList = noteList;
         this.context = context;
     }
+    public void updateNoteList(List<Note> newNoteList) {
+        this.noteList = newNoteList;
+        notifyDataSetChanged(); // Обновляем отображение RecyclerView
+    }
 
     @Override
     public NoteViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
