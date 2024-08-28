@@ -42,7 +42,7 @@ public class NoteListRecyclerViewHelper extends RecyclerView.Adapter<NoteListRec
     public void onBindViewHolder(NoteViewHolder holder, int position) {
         Note note = noteList.get(position);
         holder.titleTextView.setText(note.getTitle());
-        holder.contentTextView.setText(note.getBody());
+        holder.contentTextView.setText(note.getContent());
 
         // Обработка клика на элементе списка
         holder.itemView.setOnClickListener(new View.OnClickListener() {
@@ -51,7 +51,7 @@ public class NoteListRecyclerViewHelper extends RecyclerView.Adapter<NoteListRec
                 Intent intent = new Intent(context, NoteDetailsActivity.class);
                 intent.putExtra("note_id", note.getNote_id());
                 intent.putExtra("title", note.getTitle());
-                intent.putExtra("content", note.getBody());
+                intent.putExtra("content", note.getContent());
 
                 ((MainActivity) context).startActivityForResult(intent, MainActivity.EDIT_NOTE_REQUEST); // Код для редактирования заметки
             }

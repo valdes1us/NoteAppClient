@@ -17,6 +17,8 @@ import androidx.appcompat.widget.Toolbar;
 
 import com.valdesius.noteapp.models.Note;
 import com.valdesius.noteapp.models.NoteApi;
+import com.valdesius.noteapp.models.NoteDao;
+import com.valdesius.noteapp.models.NoteDatabase;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -28,16 +30,18 @@ public class NoteDetailsActivity extends AppCompatActivity {
     private int noteId = -1;
     private EditText toolbarTitleEditText;
     private EditText contentEditText;
-
-    private Retrofit retrofit;
     private NoteApi noteApi;
     private ImageView backButton;
+    private NoteDatabase noteDatabase;
+    private NoteDao noteDao;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note_details);
 
+        noteDatabase = NoteDatabase.getDatabase(this);
+        noteDao = noteDatabase.noteDao();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             Window window = getWindow();
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
@@ -48,19 +52,13 @@ public class NoteDetailsActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         // Добавляем кнопку "Назад" в тулбар
-
         backButton = findViewById(R.id.back_button);
         toolbarTitleEditText = findViewById(R.id.toolbarTitleEditText);
         contentEditText = findViewById(R.id.contentEditText);
 
         back();
         // Настройка Retrofit
-        retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.0.35:8080")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
 
-        noteApi = retrofit.create(NoteApi.class);
 
         // Получение данных о заметке
         Intent intent = getIntent();
@@ -69,9 +67,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
             toolbarTitleEditText.setText(intent.getStringExtra("title"));
             contentEditText.setText(intent.getStringExtra("content"));
         }
-
     }
-
 
     private void back() {
         backButton.setOnClickListener(new View.OnClickListener() {
@@ -91,51 +87,25 @@ public class NoteDetailsActivity extends AppCompatActivity {
             return;
         }
 
-        Note note = new Note(noteId, title, content);
-
+        Note note;
         if (noteId != -1) {
-            // Обновление заметки
-            Call<Note> call = noteApi.updateNote(noteId, note);
-            call.enqueue(new Callback<Note>() {
-                @Override
-                public void onResponse(Call<Note> call, Response<Note> response) {
-                    if (response.isSuccessful()) {
-                        Toast.makeText(NoteDetailsActivity.this, "Заметка обновлена", Toast.LENGTH_SHORT).show();
-                        setResult(RESULT_OK);
-                        finish(); // Закрываем активность после сохранения
-                    } else {
-                        Toast.makeText(NoteDetailsActivity.this, "Ошибка при обновлении заметки", Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<Note> call, Throwable t) {
-                    Log.e("NoteDetailsActivity", "Ошибка: " + t.getMessage());
-                    Toast.makeText(NoteDetailsActivity.this, "Ошибка при соединении с сервером", Toast.LENGTH_SHORT).show();
-                }
-            });
+            note = new Note(noteId, title, content);
         } else {
-            // Создание новой заметки
-            Call<Note> call = noteApi.createNote(note);
-            call.enqueue(new Callback<Note>() {
-                @Override
-                public void onResponse(Call<Note> call, Response<Note> response) {
-                    if (response.isSuccessful()) {
-                        Toast.makeText(NoteDetailsActivity.this, "Заметка сохранена", Toast.LENGTH_SHORT).show();
-                        setResult(RESULT_OK);
-                        finish(); // Закрываем активность после сохранения
-                    } else {
-                        Toast.makeText(NoteDetailsActivity.this, "Ошибка при сохранении заметки", Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<Note> call, Throwable t) {
-                    Log.e("NoteDetailsActivity", "Ошибка: " + t.getMessage());
-                    Toast.makeText(NoteDetailsActivity.this, "Ошибка при соединении с сервером", Toast.LENGTH_SHORT).show();
-                }
-            });
+            note = new Note(title, content);
         }
+
+        new Thread(() -> {
+            if (noteId != -1) {
+                noteDao.update(note);
+            } else {
+                noteDao.insert(note);
+            }
+            runOnUiThread(() -> {
+                Toast.makeText(NoteDetailsActivity.this, "Заметка сохранена", Toast.LENGTH_SHORT).show();
+                setResult(RESULT_OK);
+                finish();
+            });
+        }).start();
     }
 
     @Override

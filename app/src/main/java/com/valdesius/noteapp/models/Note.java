@@ -1,23 +1,27 @@
 package com.valdesius.noteapp.models;
 
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
+@Entity(tableName = "notes")
 public class Note {
+    @PrimaryKey(autoGenerate = true)
     private int note_id;
     private String title;
     private String content;
 
-    public Note(int note_id, String title, String body) {
+    public Note(int note_id, String title, String content) {
         this.note_id = note_id;
         this.title = title;
-        this.content = body;
+        this.content = content;
     }
 
     public Note() {
-
     }
 
-    public Note(String title, String body) {
+    public Note(String title, String content) {
         this.title = title;
-        this.content = body;
+        this.content = content;
     }
 
     public int getNote_id() {
@@ -36,11 +40,11 @@ public class Note {
         this.title = title;
     }
 
-    public String getBody() {
+    public String getContent() {
         return content;
     }
 
-    public void setBody(String body) {
-        this.content = body;
+    public void setContent(String content) {
+        this.content = content;
     }
 }

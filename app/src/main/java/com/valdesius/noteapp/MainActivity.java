@@ -7,9 +7,9 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -27,16 +27,11 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.valdesius.noteapp.helpers.NoteListRecyclerViewHelper;
 import com.valdesius.noteapp.models.Note;
-import com.valdesius.noteapp.models.NoteApi;
+import com.valdesius.noteapp.models.NoteDao;
+import com.valdesius.noteapp.models.NoteDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -47,10 +42,13 @@ public class MainActivity extends AppCompatActivity {
     private NoteListRecyclerViewHelper noteListAdapter;
     private List<Note> noteList;
     private List<Note> filteredNoteList;
-    private Retrofit retrofit;
-    private NoteApi noteApi;
+
     private FloatingActionButton createNoteButton;
-    private SearchView searchView;
+    private TextView emptyListText;
+    private ImageView noteImage;
+
+    private NoteDatabase noteDatabase;
+    private NoteDao noteDao;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +58,13 @@ public class MainActivity extends AppCompatActivity {
         // Настройка Toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        // Инициализация базы данных
+        noteDatabase = NoteDatabase.getDatabase(this);
+        noteDao = noteDatabase.noteDao();
+
+        // Загрузка заметок из базы данных
+        loadNotesFromDatabase();
 
         // Обработка системных отступов
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -75,35 +80,15 @@ public class MainActivity extends AppCompatActivity {
         noteRecyclerView = findViewById(R.id.note_list_recycler_view);
         noteRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        searchView = findViewById(R.id.search_view);
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                return false; // Можно оставить пустым, если не используем отправку
-            }
 
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                filterNotes(newText);
-                return true;
-            }
-        });
-
-
-
-        // Настройка Retrofit
-        retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.0.35:8080")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        noteApi = retrofit.create(NoteApi.class);
 
         // Загрузка заметок с сервера
-        loadNotesFromServer();
-
+        loadNotesFromDatabase();
         createNoteButton = findViewById(R.id.create_note_btn);
         createNote();
+
+        emptyListText = findViewById(R.id.empty_list_text);
+        noteImage = findViewById(R.id.note_image);
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
             @Override
@@ -150,62 +135,40 @@ public class MainActivity extends AppCompatActivity {
                     c.drawText("Удалить", textX, textY, p);
                 }
             }
-
-
-
         });
         itemTouchHelper.attachToRecyclerView(noteRecyclerView);
+    }
 
+    private void loadNotesFromDatabase() {
+        new Thread(() -> {
+            noteList = noteDao.getAllNotes();
+            runOnUiThread(() -> {
+                noteListAdapter = new NoteListRecyclerViewHelper(noteList, MainActivity.this);
+                noteRecyclerView.setAdapter(noteListAdapter);
+                updateEmptyListVisibility();
+            });
+        }).start();
     }
 
     private void filterNotes(String query) {
+        if (noteListAdapter == null) {
+            return; // Если адаптер не инициализирован, выходим из метода
+        }
+
         if (query.isEmpty()) {
             filteredNoteList = noteList; // Если строка поиска пуста, показываем все заметки
         } else {
             filteredNoteList = new ArrayList<>();
             for (Note note : noteList) {
                 if (note.getTitle().toLowerCase().contains(query.toLowerCase()) ||
-                        note.getBody().toLowerCase().contains(query.toLowerCase())) {
+                        note.getContent().toLowerCase().contains(query.toLowerCase())) {
                     filteredNoteList.add(note);
                 }
             }
         }
         noteListAdapter.updateNoteList(filteredNoteList);
+        updateEmptyListVisibility();
     }
-    private void loadNotesFromServer() {
-        Call<List<Note>> call = noteApi.getAllNotes();
-        call.enqueue(new Callback<List<Note>>() {
-            @Override
-            public void onResponse(Call<List<Note>> call, Response<List<Note>> response) {
-                if (response.isSuccessful()) {
-                    noteList = response.body();
-
-                    // Проверка, пустой ли список заметок
-                    if (noteList != null && !noteList.isEmpty()) {
-                        // Скрыть изображение и текст о пустом списке
-                        findViewById(R.id.note_image).setVisibility(View.GONE);
-                        findViewById(R.id.empty_list_text).setVisibility(View.GONE);
-                    } else {
-                        // Показать изображение и текст, если список пуст
-                        findViewById(R.id.note_image).setVisibility(View.VISIBLE);
-                        findViewById(R.id.empty_list_text).setVisibility(View.VISIBLE);
-                    }
-
-                    noteListAdapter = new NoteListRecyclerViewHelper(noteList, MainActivity.this);
-                    noteRecyclerView.setAdapter(noteListAdapter);
-                } else {
-                    Toast.makeText(MainActivity.this, "Ошибка загрузки данных", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<List<Note>> call, Throwable t) {
-                Log.e("RetrofitError", t.getMessage(), t);
-                Toast.makeText(MainActivity.this, "Ошибка подключения к серверу: " + t.getMessage(), Toast.LENGTH_LONG).show();
-            }
-        });
-    }
-
 
     private void createNote() {
         createNoteButton.setOnClickListener(new View.OnClickListener() {
@@ -222,9 +185,9 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == CREATE_NOTE_REQUEST && resultCode == RESULT_OK) {
-            loadNotesFromServer(); // Перезагружаем список заметок после создания новой заметки
+            loadNotesFromDatabase(); // Перезагружаем список заметок после создания новой заметки
         } else if (requestCode == EDIT_NOTE_REQUEST && resultCode == RESULT_OK) {
-            loadNotesFromServer(); // Перезагружаем список заметок после редактирования
+            loadNotesFromDatabase(); // Перезагружаем список заметок после редактирования
         }
     }
 
@@ -241,10 +204,7 @@ public class MainActivity extends AppCompatActivity {
                         // Отмена удаления, возвращаем заметку на прежнее место
                         noteList.add(position, note);
                         noteListAdapter.notifyItemInserted(position);
-
-                        // Прячем сообщение о пустом списке, если оно появилось
-                        findViewById(R.id.empty_list_text).setVisibility(View.GONE);
-                        findViewById(R.id.note_image).setVisibility(View.GONE);
+                        updateEmptyListVisibility();
                     }
                 });
 
@@ -252,8 +212,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDismissed(Snackbar snackbar, int event) {
                 if (event != Snackbar.Callback.DISMISS_EVENT_ACTION) {
-                    // Если действие не было отменено, выполняем удаление с сервера
-                    deleteNoteFromServer(note.getNote_id(), position);
+                    // Если действие не было отменено, выполняем удаление из базы данных
+                    deleteNoteFromDatabase(note);
+                    updateEmptyListVisibility();
                 }
             }
         });
@@ -261,33 +222,19 @@ public class MainActivity extends AppCompatActivity {
         snackbar.show();
     }
 
-    private void deleteNoteFromServer(int noteId, int position) {
-        Call<Void> call = noteApi.deleteNote(noteId);
-        call.enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) {
-                    Toast.makeText(MainActivity.this, "Заметка удалена", Toast.LENGTH_SHORT).show();
-
-                    // Проверка на пустоту списка заметок после удаления
-                    if (noteList.isEmpty()) {
-                        // Показать сообщение и изображение, что список заметок пуст
-                        findViewById(R.id.empty_list_text).setVisibility(View.VISIBLE);
-                        findViewById(R.id.note_image).setVisibility(View.VISIBLE);
-                    }
-                } else {
-                    Toast.makeText(MainActivity.this, "Ошибка удаления заметки", Toast.LENGTH_SHORT).show();
-                    noteListAdapter.notifyItemChanged(position); // Восстанавливаем элемент, если ошибка
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                Log.e("RetrofitError", t.getMessage(), t);
-                Toast.makeText(MainActivity.this, "Ошибка подключения к серверу: " + t.getMessage(), Toast.LENGTH_LONG).show();
-                noteListAdapter.notifyItemChanged(position); // Восстанавливаем элемент, если ошибка
-            }
-        });
+    private void deleteNoteFromDatabase(Note note) {
+        new Thread(() -> {
+            noteDao.delete(note);
+        }).start();
     }
 
+    private void updateEmptyListVisibility() {
+        if (noteList.isEmpty()) {
+            emptyListText.setVisibility(View.VISIBLE);
+            noteImage.setVisibility(View.VISIBLE);
+        } else {
+            emptyListText.setVisibility(View.GONE);
+            noteImage.setVisibility(View.GONE);
+        }
+    }
 }
