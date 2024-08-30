@@ -1,9 +1,9 @@
 package com.valdesius.noteapp;
 
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,11 +18,13 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.core.widget.NestedScrollView;
 
 import com.valdesius.noteapp.helpers.ColorAdapter;
 import com.valdesius.noteapp.helpers.FontColorAdapter;
 import com.valdesius.noteapp.helpers.FontSizeAdapter;
+import com.valdesius.noteapp.helpers.FontStyleAdapter;
 import com.valdesius.noteapp.models.Note;
 import com.valdesius.noteapp.models.NoteDao;
 import com.valdesius.noteapp.models.NoteDatabase;
@@ -35,13 +37,15 @@ public class NoteDetailsActivity extends AppCompatActivity {
     private NoteDatabase noteDatabase;
     private NoteDao noteDao;
     private ImageView colorChange;
-    private ImageView fontChange; // Новое поле для изменения размера шрифта
+    private ImageView fontChange;
+    private ImageView fontStyleChange; // Новое поле для изменения стиля шрифта
     private ImageView boldChange;
     private boolean isBold = false;
     private NestedScrollView nestedScrollView;
     private String currentBackgroundColor;
-    private String currentFontColor; // Новое поле для цвета шрифта
-    private float currentFontSize = 18; // По умолчанию
+    private String currentFontColor;
+    private float currentFontSize = 18;
+    private String currentFontStyle = "Arial"; // По умолчанию
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,16 +63,14 @@ public class NoteDetailsActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // Добавляем кнопку "Назад" в тулбар
         backButton = findViewById(R.id.back_button);
         toolbarTitleEditText = findViewById(R.id.toolbarTitleEditText);
         contentEditText = findViewById(R.id.contentEditText);
         colorChange = findViewById(R.id.color_change);
-        fontChange = findViewById(R.id.font_change); // Инициализация кнопки для изменения размера шрифта
-        boldChange = findViewById(R.id.bold_change);
+        fontChange = findViewById(R.id.font_change);
+        fontStyleChange = findViewById(R.id.font_style_change); // Инициализация кнопки для изменения стиля шрифта
         nestedScrollView = findViewById(R.id.nestedScrollView);
         back();
-        setupBoldChangeListener();
 
         colorChange.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -84,7 +86,13 @@ public class NoteDetailsActivity extends AppCompatActivity {
             }
         });
 
-        // Получение данных о заметке
+        fontStyleChange.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showFontStylePicker();
+            }
+        });
+
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra("note_id")) {
             noteId = intent.getIntExtra("note_id", -1);
@@ -111,26 +119,39 @@ public class NoteDetailsActivity extends AppCompatActivity {
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                onBackPressed(); // Вызываем onBackPressed для сохранения заметки перед возвратом
+                onBackPressed();
             }
         });
     }
 
     private void applyFontSize(float fontSize) {
-        int start = contentEditText.getSelectionStart();
-        int end = contentEditText.getSelectionEnd();
-
-        if (start > end) {
-            int temp = start;
-            start = end;
-            end = temp;
-        }
-
-
-        // Применяем размер шрифта к заголовку
         contentEditText.setTextSize(fontSize);
         toolbarTitleEditText.setTextSize(fontSize);
     }
+
+    private void applyFontStyle(String fontStyle) {
+        Typeface typeface = null;
+        switch (fontStyle) {
+            case "Arial":
+                typeface = ResourcesCompat.getFont(this, R.font.arial);
+                break;
+            case "Times New Roman":
+                typeface = ResourcesCompat.getFont(this, R.font.times);
+                break;
+            case "Courier":
+                typeface = ResourcesCompat.getFont(this, R.font.courier);
+                break;
+            case "Verdana":
+                typeface = ResourcesCompat.getFont(this, R.font.verdana);
+                break;
+            default:
+                typeface = Typeface.DEFAULT;
+                break;
+        }
+        contentEditText.setTypeface(typeface);
+        toolbarTitleEditText.setTypeface(typeface);
+    }
+
 
 
     private int getColorForString(String colorString) {
@@ -148,15 +169,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
         }
     }
 
-    private void setupBoldChangeListener() {
-        boldChange.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                isBold = !isBold;
-            }
-        });
-    }
-
 
     private void showBackgroundColorPicker() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -169,7 +181,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
         ColorAdapter adapter = new ColorAdapter(this, android.R.layout.simple_list_item_1, colors);
         colorList.setAdapter(adapter);
 
-        AlertDialog dialog = builder.create(); // Создаем диалоговое окно
+        AlertDialog dialog = builder.create();
 
         colorList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -178,11 +190,11 @@ public class NoteDetailsActivity extends AppCompatActivity {
                 int color = getColorForString(selectedColor);
                 nestedScrollView.setBackgroundColor(color);
                 currentBackgroundColor = selectedColor;
-                dialog.dismiss(); // Закрываем диалоговое окно
+                dialog.dismiss();
             }
         });
 
-        dialog.show(); // Показываем диалоговое окно
+        dialog.show();
     }
 
     private void showFontColorPicker() {
@@ -196,7 +208,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
         FontColorAdapter adapter = new FontColorAdapter(this, android.R.layout.simple_list_item_1, colors);
         colorList.setAdapter(adapter);
 
-        AlertDialog dialog = builder.create(); // Создаем диалоговое окно
+        AlertDialog dialog = builder.create();
 
         colorList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -205,12 +217,12 @@ public class NoteDetailsActivity extends AppCompatActivity {
                 int color = getColorForString(selectedColor);
                 contentEditText.setTextColor(color);
                 toolbarTitleEditText.setTextColor(color);
-                currentFontColor = selectedColor; // Сохраняем выбранный цвет шрифта
-                dialog.dismiss(); // Закрываем диалоговое окно
+                currentFontColor = selectedColor;
+                dialog.dismiss();
             }
         });
 
-        dialog.show(); // Показываем диалоговое окно
+        dialog.show();
     }
 
     private void showFontSizePicker() {
@@ -224,7 +236,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
         FontSizeAdapter adapter = new FontSizeAdapter(this, android.R.layout.simple_list_item_1, sizes);
         sizeList.setAdapter(adapter);
 
-        AlertDialog dialog = builder.create(); // Создаем диалоговое окно
+        AlertDialog dialog = builder.create();
 
         sizeList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -233,13 +245,38 @@ public class NoteDetailsActivity extends AppCompatActivity {
                 float size = Float.parseFloat(selectedSize);
                 currentFontSize = size;
                 applyFontSize(currentFontSize);
-                dialog.dismiss(); // Закрываем диалоговое окно
+                dialog.dismiss();
             }
         });
 
-        dialog.show(); // Показываем диалоговое окно
+        dialog.show();
     }
 
+    private void showFontStylePicker() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View view = getLayoutInflater().inflate(R.layout.dialog_font_style_picker, null);
+        builder.setView(view);
+
+        ListView styleList = view.findViewById(R.id.font_style_list);
+        String[] styles = getResources().getStringArray(R.array.font_styles);
+
+        FontStyleAdapter adapter = new FontStyleAdapter(this, android.R.layout.simple_list_item_1, styles);
+        styleList.setAdapter(adapter);
+
+        AlertDialog dialog = builder.create();
+
+        styleList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String selectedStyle = styles[position];
+                currentFontStyle = selectedStyle;
+                applyFontStyle(currentFontStyle);
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
+    }
 
     private void loadNote() {
         new Thread(() -> {
@@ -261,13 +298,16 @@ public class NoteDetailsActivity extends AppCompatActivity {
                     }
                     if (note.getFontSize() != 0) {
                         currentFontSize = note.getFontSize();
-                        applyFontSize(currentFontSize); // Применяем сохраненный размер шрифта
+                        applyFontSize(currentFontSize);
+                    }
+                    if (note.getFontStyle() != null) {
+                        currentFontStyle = note.getFontStyle();
+                        applyFontStyle(currentFontStyle);
                     }
                 }
             });
         }).start();
     }
-
 
     private void saveNote() {
         String title = toolbarTitleEditText.getText().toString().trim();
@@ -280,9 +320,9 @@ public class NoteDetailsActivity extends AppCompatActivity {
 
         Note note;
         if (noteId != -1) {
-            note = new Note(noteId, title, content, currentBackgroundColor, currentFontColor, currentFontSize);
+            note = new Note(noteId, title, content, currentBackgroundColor, currentFontColor, currentFontSize, currentFontStyle);
         } else {
-            note = new Note(title, content, currentBackgroundColor, currentFontColor, currentFontSize);
+            note = new Note(title, content, currentBackgroundColor, currentFontColor, currentFontSize, currentFontStyle);
         }
 
         new Thread(() -> {
@@ -299,14 +339,15 @@ public class NoteDetailsActivity extends AppCompatActivity {
         }).start();
     }
 
+
     @Override
     public void onBackPressed() {
         String content = contentEditText.getText().toString().trim();
 
         if (!content.isEmpty()) {
-            saveNote(); // Сохранить заметку, если есть текст
+            saveNote();
         } else {
-            super.onBackPressed(); // Просто выйти, если текста нет
+            super.onBackPressed();
         }
     }
 }

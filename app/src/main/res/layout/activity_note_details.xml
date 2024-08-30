@@ -100,7 +100,7 @@
             android:layout_width="wrap_content"
             android:layout_centerInParent="true"
             android:layout_height="wrap_content"
-            android:src="@drawable/fontsize"
+            android:src="@drawable/font"
             android:contentDescription="Иконка 1"
             android:layout_alignParentStart="true" />
 
@@ -119,10 +119,10 @@
         <!-- Spinner для выбора цвета -->
 
         <ImageView
-            android:id="@+id/bold_change"
+            android:id="@+id/font_style_change"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/bold"
+            android:src="@drawable/feather"
             android:layout_centerInParent="true"
             android:contentDescription="Иконка 2"
             android:layout_alignParentEnd="true" />

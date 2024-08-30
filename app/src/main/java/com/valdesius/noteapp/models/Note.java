@@ -10,50 +10,34 @@ public class Note {
     private String title;
     private String content;
     private String backgroundColor;
-    private String fontColor; // Новое поле для цвета шрифта
+    private String fontColor;
     private float fontSize;
+    private String fontStyle; // Новое поле для стиля шрифта
 
     // Конструкторы, геттеры и сеттеры
 
-    public Note(int note_id, String title, String content, String backgroundColor, String fontColor, float fontSize) {
+    public Note(int note_id, String title, String content, String backgroundColor, String fontColor, float fontSize, String fontStyle) {
         this.note_id = note_id;
         this.title = title;
         this.content = content;
         this.backgroundColor = backgroundColor;
         this.fontColor = fontColor;
         this.fontSize = fontSize;
+        this.fontStyle = fontStyle;
     }
 
-    public Note(String title, String content, String backgroundColor, String fontColor, float fontSize) {
+    public Note(String title, String content, String backgroundColor, String fontColor, float fontSize, String fontStyle) {
         this.title = title;
         this.content = content;
         this.backgroundColor = backgroundColor;
         this.fontColor = fontColor;
         this.fontSize = fontSize;
-    }
-
-    public Note(int note_id, String title, String content, String backgroundColor, String fontColor) {
-        this.note_id = note_id;
-        this.title = title;
-        this.content = content;
-        this.backgroundColor = backgroundColor;
-        this.fontColor = fontColor;
-    }
-
-    public Note(String title, String content, String backgroundColor, String fontColor) {
-        this.title = title;
-        this.content = content;
-        this.backgroundColor = backgroundColor;
-        this.fontColor = fontColor;
+        this.fontStyle = fontStyle;
     }
 
     public Note() {
     }
-
-    public Note(String title, String content) {
-        this.title = title;
-        this.content = content;
-    }
+    // Добавьте другие конструкторы, если необходимо
 
     public int getNote_id() {
         return note_id;
@@ -101,5 +85,13 @@ public class Note {
 
     public void setFontSize(float fontSize) {
         this.fontSize = fontSize;
+    }
+
+    public String getFontStyle() {
+        return fontStyle;
+    }
+
+    public void setFontStyle(String fontStyle) {
+        this.fontStyle = fontStyle;
     }
 }

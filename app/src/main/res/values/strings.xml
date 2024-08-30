@@ -17,5 +17,13 @@
             <item>24</item>
         </string-array>
 
+        <string-array name="font_styles">
+            <item>Arial</item>
+            <item>Times New Roman</item>
+            <item>Courier</item>
+            <item>Verdana</item>
+        </string-array>
+
+
 
 </resources>
