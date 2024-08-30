@@ -9,11 +9,42 @@ public class Note {
     private int note_id;
     private String title;
     private String content;
+    private String backgroundColor;
+    private String fontColor; // Новое поле для цвета шрифта
+    private float fontSize;
 
-    public Note(int note_id, String title, String content) {
+    // Конструкторы, геттеры и сеттеры
+
+    public Note(int note_id, String title, String content, String backgroundColor, String fontColor, float fontSize) {
         this.note_id = note_id;
         this.title = title;
         this.content = content;
+        this.backgroundColor = backgroundColor;
+        this.fontColor = fontColor;
+        this.fontSize = fontSize;
+    }
+
+    public Note(String title, String content, String backgroundColor, String fontColor, float fontSize) {
+        this.title = title;
+        this.content = content;
+        this.backgroundColor = backgroundColor;
+        this.fontColor = fontColor;
+        this.fontSize = fontSize;
+    }
+
+    public Note(int note_id, String title, String content, String backgroundColor, String fontColor) {
+        this.note_id = note_id;
+        this.title = title;
+        this.content = content;
+        this.backgroundColor = backgroundColor;
+        this.fontColor = fontColor;
+    }
+
+    public Note(String title, String content, String backgroundColor, String fontColor) {
+        this.title = title;
+        this.content = content;
+        this.backgroundColor = backgroundColor;
+        this.fontColor = fontColor;
     }
 
     public Note() {
@@ -46,5 +77,29 @@ public class Note {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getBackgroundColor() {
+        return backgroundColor;
+    }
+
+    public void setBackgroundColor(String backgroundColor) {
+        this.backgroundColor = backgroundColor;
+    }
+
+    public String getFontColor() {
+        return fontColor;
+    }
+
+    public void setFontColor(String fontColor) {
+        this.fontColor = fontColor;
+    }
+
+    public float getFontSize() {
+        return fontSize;
+    }
+
+    public void setFontSize(float fontSize) {
+        this.fontSize = fontSize;
     }
 }

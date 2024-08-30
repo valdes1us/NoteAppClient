@@ -1,3 +1,21 @@
 <resources>
     <string name="app_name">NoteApp</string>
+        <string-array name="font_colors">
+            <item>Черный</item>
+            <item>Белый</item>
+            <item>Красный</item>
+            <item>Зеленый</item>
+            <item>Синий</item>
+        </string-array>
+        <string-array name="font_sizes">
+            <item>12</item>
+            <item>14</item>
+            <item>16</item>
+            <item>18</item>
+            <item>20</item>
+            <item>22</item>
+            <item>24</item>
+        </string-array>
+
+
 </resources>

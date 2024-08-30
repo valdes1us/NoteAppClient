@@ -29,8 +29,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/an"
-            android:contentDescription="Назад"
-            android:padding="0dp" />
+                android:contentDescription="Назад"
+                android:padding="0dp" />
 
             <!-- Поле ввода заголовка -->
             <EditText
@@ -47,30 +47,84 @@
         </LinearLayout>
     </androidx.appcompat.widget.Toolbar>
 
-    <EditText
-        android:id="@+id/titleEditText"
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/nestedScrollView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/toolbar"
-        android:layout_margin="5dp"
-        android:background="@android:color/transparent"
-        android:hint="Название"
-        android:padding="16dp"
-        android:textColor="#FFFFFF"
-        android:textColorHint="#CCCCCC"
-        style="@style/CustomEditText"
-        android:visibility="gone"/>
+        android:layout_above="@id/toolbar_bottom">
 
-    <EditText
-        android:id="@+id/contentEditText"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/titleEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:background="@android:color/transparent"
+                android:hint="Название"
+                android:padding="16dp"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#CCCCCC"
+                style="@style/CustomEditText"
+                android:visibility="gone"/>
+
+            <EditText
+                android:id="@+id/contentEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:background="@android:color/transparent"
+                android:hint="Введите текст"
+                android:padding="16dp"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#CCCCCC"
+                style="@style/CustomEditText"/>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <RelativeLayout
+        android:id="@+id/toolbar_bottom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/titleEditText"
-        android:layout_margin="5dp"
-        android:background="@android:color/transparent"
-        android:hint="Введите текст"
-        android:padding="16dp"
-        android:textColor="#FFFFFF"
-        android:textColorHint="#CCCCCC"
-        style="@style/CustomEditText"/>
+        android:layout_alignParentBottom="true"
+        android:background="#2e2e2e"
+        android:padding="16dp">
+
+        <!-- Первая иконка -->
+        <ImageView
+            android:id="@+id/font_change"
+            android:layout_width="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_height="wrap_content"
+            android:src="@drawable/fontsize"
+            android:contentDescription="Иконка 1"
+            android:layout_alignParentStart="true" />
+
+
+
+        <!-- Вторая иконка -->
+        <ImageView
+            android:id="@+id/color_change"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+           android:layout_centerInParent="true"
+            android:src="@drawable/rgb"
+            android:layout_centerVertical="true"
+            android:contentDescription="Иконка 2" />
+
+        <!-- Spinner для выбора цвета -->
+
+        <ImageView
+            android:id="@+id/bold_change"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/bold"
+            android:layout_centerInParent="true"
+            android:contentDescription="Иконка 2"
+            android:layout_alignParentEnd="true" />
+    </RelativeLayout>
 </RelativeLayout>

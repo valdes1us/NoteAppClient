@@ -5,7 +5,7 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import android.content.Context;
 
-@Database(entities = {Note.class}, version = 1)
+@Database(entities = {Note.class}, version = 4)
 public abstract class NoteDatabase extends RoomDatabase {
     public abstract NoteDao noteDao();
 
@@ -17,6 +17,7 @@ public abstract class NoteDatabase extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                                     NoteDatabase.class, "note_database")
+                            .fallbackToDestructiveMigration()
                             .build();
                 }
             }
@@ -24,3 +25,4 @@ public abstract class NoteDatabase extends RoomDatabase {
         return INSTANCE;
     }
 }
+

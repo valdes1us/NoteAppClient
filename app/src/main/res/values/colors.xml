@@ -8,5 +8,9 @@
     <color name="blue">#239EFF</color>
     <color name="colorCursor">#0000FF</color> <!-- Цвет курсора -->
     <color name="colorHighlight">#0000FF</color> <!-- Цвет выделения текста -->
-    <color name="red">#560319</color>
+    <color name="red">#FB0303</color>
+        <color name="green">#00FF00</color>
+        <color name="blue2">#0000FF</color>
+        <!-- Добавьте другие цвета по необходимости -->
+
 </resources>
