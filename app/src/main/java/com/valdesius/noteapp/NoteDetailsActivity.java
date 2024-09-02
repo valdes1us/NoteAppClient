@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -21,13 +22,17 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.widget.NestedScrollView;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.valdesius.noteapp.helpers.ColorAdapter;
 import com.valdesius.noteapp.helpers.FontColorAdapter;
 import com.valdesius.noteapp.helpers.FontSizeAdapter;
 import com.valdesius.noteapp.helpers.FontStyleAdapter;
+import com.valdesius.noteapp.helpers.ListAdapter;
 import com.valdesius.noteapp.models.Note;
 import com.valdesius.noteapp.models.NoteDao;
 import com.valdesius.noteapp.models.NoteDatabase;
+
+import java.util.List;
 
 public class NoteDetailsActivity extends AppCompatActivity {
     private int noteId = -1;
@@ -39,13 +44,15 @@ public class NoteDetailsActivity extends AppCompatActivity {
     private ImageView colorChange;
     private ImageView fontChange;
     private ImageView fontStyleChange; // Новое поле для изменения стиля шрифта
-    private ImageView boldChange;
+    private ImageView bgChange;
+    private ImageView listCreate; // Новое поле для создания маркерованного списка
     private boolean isBold = false;
     private NestedScrollView nestedScrollView;
     private String currentBackgroundColor;
     private String currentFontColor;
     private float currentFontSize = 18;
     private String currentFontStyle = "Arial"; // По умолчанию
+    private List<Note> noteList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +69,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle("");
 
         backButton = findViewById(R.id.back_button);
         toolbarTitleEditText = findViewById(R.id.toolbarTitleEditText);
@@ -69,6 +77,8 @@ public class NoteDetailsActivity extends AppCompatActivity {
         colorChange = findViewById(R.id.color_change);
         fontChange = findViewById(R.id.font_change);
         fontStyleChange = findViewById(R.id.font_style_change); // Инициализация кнопки для изменения стиля шрифта
+        bgChange = findViewById(R.id.bg_change);
+        listCreate = findViewById(R.id.list_create); // Инициализация кнопки для создания маркерованного списка
         nestedScrollView = findViewById(R.id.nestedScrollView);
         back();
 
@@ -93,6 +103,20 @@ public class NoteDetailsActivity extends AppCompatActivity {
             }
         });
 
+        bgChange.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showBackgroundColorPicker();
+            }
+        });
+
+        listCreate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showListPicker();
+            }
+        });
+
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra("note_id")) {
             noteId = intent.getIntExtra("note_id", -1);
@@ -109,7 +133,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_background_color) {
-            showBackgroundColorPicker();
+            deleteNote();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -127,6 +151,11 @@ public class NoteDetailsActivity extends AppCompatActivity {
     private void applyFontSize(float fontSize) {
         contentEditText.setTextSize(fontSize);
         toolbarTitleEditText.setTextSize(fontSize);
+    }
+
+    public void deleteNoteWithUndo(Note note, int position) {
+        // Удаляем заметку из списка и обновляем адаптер
+        noteList.remove(position);
     }
 
     private void applyFontStyle(String fontStyle) {
@@ -152,8 +181,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
         toolbarTitleEditText.setTypeface(typeface);
     }
 
-
-
     private int getColorForString(String colorString) {
         switch (colorString) {
             case "Белый":
@@ -168,7 +195,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
                 return getResources().getColor(R.color.black);
         }
     }
-
 
     private void showBackgroundColorPicker() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -339,6 +365,21 @@ public class NoteDetailsActivity extends AppCompatActivity {
         }).start();
     }
 
+    private void deleteNote() {
+        if (noteId != -1) {
+            new Thread(() -> {
+                Note note = noteDao.getNoteById(noteId);
+                noteDao.delete(noteDao.getNoteById(noteId));
+                runOnUiThread(() -> {
+                    Toast.makeText(NoteDetailsActivity.this, "Заметка удалена", Toast.LENGTH_SHORT).show();
+                    setResult(RESULT_OK);
+                    finish();
+                });
+            }).start();
+        } else {
+            Toast.makeText(this, "Заметка не найдена", Toast.LENGTH_SHORT).show();
+        }
+    }
 
     @Override
     public void onBackPressed() {
@@ -349,5 +390,65 @@ public class NoteDetailsActivity extends AppCompatActivity {
         } else {
             super.onBackPressed();
         }
+    }
+
+    private void createBulletList() {
+        String currentText = contentEditText.getText().toString();
+        String[] lines = currentText.split("\n");
+        StringBuilder bulletList = new StringBuilder();
+
+        for (String line : lines) {
+            if (!line.trim().isEmpty()) {
+                bulletList.append("• ").append(line).append("\n");
+            } else {
+                bulletList.append(line).append("\n");
+            }
+        }
+
+        contentEditText.setText(bulletList.toString());
+    }
+
+    private void createNumberedList() {
+        String currentText = contentEditText.getText().toString();
+        String[] lines = currentText.split("\n");
+        StringBuilder numberedList = new StringBuilder();
+
+        for (int i = 0; i < lines.length; i++) {
+            if (!lines[i].trim().isEmpty()) {
+                numberedList.append(i + 1).append(". ").append(lines[i]).append("\n");
+            } else {
+                numberedList.append(lines[i]).append("\n");
+            }
+        }
+
+        contentEditText.setText(numberedList.toString());
+    }
+
+    private void showListPicker() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View view = getLayoutInflater().inflate(R.layout.dialog_list_picker, null);
+        builder.setView(view);
+
+        ListView listPicker = view.findViewById(R.id.style_list);
+        String[] listTypes = getResources().getStringArray(R.array.list_picker);
+
+        ListAdapter adapter = new ListAdapter(this, android.R.layout.simple_list_item_1, listTypes);
+        listPicker.setAdapter(adapter);
+
+        AlertDialog dialog = builder.create();
+
+        listPicker.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (position == 0) {
+                    createBulletList();
+                } else if (position == 1) {
+                    createNumberedList();
+                }
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
     }
 }

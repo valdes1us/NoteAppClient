@@ -14,6 +14,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -48,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
 
     private NoteDatabase noteDatabase;
     private NoteDao noteDao;
+    private SearchView searchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +81,20 @@ public class MainActivity extends AppCompatActivity {
         noteRecyclerView = findViewById(R.id.note_list_recycler_view);
         noteRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
+        searchView = findViewById(R.id.search_view);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                filterNotes(query);
+                return true;
+            }
 
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filterNotes(newText);
+                return true;
+            }
+        });
 
         // Загрузка заметок с сервера
         loadNotesFromDatabase();
@@ -190,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void deleteNoteWithUndo(Note note, int position) {
+    public void deleteNoteWithUndo(Note note, int position) {
         // Удаляем заметку из списка и обновляем адаптер
         noteList.remove(position);
         noteListAdapter.notifyItemRemoved(position);

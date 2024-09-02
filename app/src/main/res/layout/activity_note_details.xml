@@ -104,6 +104,17 @@
             android:contentDescription="Иконка 1"
             android:layout_alignParentStart="true" />
 
+        <ImageView
+            android:id="@+id/bg_change"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/bucket"
+            android:contentDescription="Иконка 1"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/font_change"
+            android:layout_toLeftOf="@id/color_change"
+/>
+
 
 
         <!-- Вторая иконка -->
@@ -117,6 +128,16 @@
             android:contentDescription="Иконка 2" />
 
         <!-- Spinner для выбора цвета -->
+        <ImageView
+            android:id="@+id/list_create"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/list"
+            android:contentDescription="Иконка 1"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/color_change"
+            android:layout_toLeftOf="@id/font_style_change"
+            />
 
         <ImageView
             android:id="@+id/font_style_change"

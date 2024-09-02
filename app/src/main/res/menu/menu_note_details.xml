@@ -3,6 +3,6 @@
     <item
         android:id="@+id/menu_background_color"
         android:title="Выбрать фон"
-        android:icon="@drawable/dots"
+        android:icon="@drawable/delete"
         app:showAsAction="always" />
 </menu>

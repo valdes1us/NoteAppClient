@@ -12,6 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#2e2e2e"
+        app:title=" "
         android:elevation="4dp"
         android:gravity="center_vertical">
 
@@ -29,7 +30,7 @@
             android:id="@+id/toolbar_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Заметки"
+            android:text="мЗаметки"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
             android:layout_marginStart="16dp"

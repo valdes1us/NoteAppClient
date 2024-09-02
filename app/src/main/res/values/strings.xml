@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">NoteApp</string>
+    <string name="app_name">мЗаметки</string>
         <string-array name="font_colors">
             <item>Черный</item>
             <item>Белый</item>
@@ -23,6 +23,11 @@
             <item>Courier</item>
             <item>Verdana</item>
         </string-array>
+
+    <string-array name="list_picker">
+        <item>Маркированный список</item>
+        <item>Нумерованный список</item>
+    </string-array>
 
 
 
