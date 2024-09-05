@@ -6,11 +6,16 @@
     <color name="colorPrimaryDark2">#161616</color>
     <color name="colorPrimaryDark3">#1f1f1f</color>
     <color name="blue">#239EFF</color>
+    <color name="sin">#003E6F</color>
     <color name="colorCursor">#0000FF</color> <!-- Цвет курсора -->
     <color name="colorHighlight">#0000FF</color> <!-- Цвет выделения текста -->
-    <color name="red">#FB0303</color>
-        <color name="green">#00FF00</color>
+    <color name="red">#8AFB0303</color>
+        <color name="green">#009E00</color>
         <color name="blue2">#0000FF</color>
+        <color name="grey">#545454</color>
+        <color name="fiol">#673AB7</color>
+        <color name="orange">#CEFF5722</color>
+        <color name="yellow">#D5FFEB3B</color>
         <!-- Добавьте другие цвета по необходимости -->
 
 </resources>

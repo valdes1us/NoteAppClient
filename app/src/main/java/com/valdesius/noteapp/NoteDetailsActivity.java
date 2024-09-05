@@ -1,27 +1,36 @@
 package com.valdesius.noteapp;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Typeface;
+import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.widget.NestedScrollView;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.snackbar.Snackbar;
 import com.valdesius.noteapp.helpers.ColorAdapter;
 import com.valdesius.noteapp.helpers.FontColorAdapter;
@@ -32,7 +41,12 @@ import com.valdesius.noteapp.models.Note;
 import com.valdesius.noteapp.models.NoteDao;
 import com.valdesius.noteapp.models.NoteDatabase;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import android.Manifest;
+import android.content.pm.PackageManager;
 
 public class NoteDetailsActivity extends AppCompatActivity {
     private int noteId = -1;
@@ -46,18 +60,31 @@ public class NoteDetailsActivity extends AppCompatActivity {
     private ImageView fontStyleChange; // Новое поле для изменения стиля шрифта
     private ImageView bgChange;
     private ImageView listCreate; // Новое поле для создания маркерованного списка
-    private boolean isBold = false;
     private NestedScrollView nestedScrollView;
     private String currentBackgroundColor;
     private String currentFontColor;
-    private float currentFontSize = 18;
-    private String currentFontStyle = "Arial"; // По умолчанию
-    private List<Note> noteList;
+    private float currentFontSize = 20;
+    private String currentFontStyle = "мЗаметки"; // По умолчанию
+
+    private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
+    private static final int REQUEST_SPEECH_RECOGNIZER = 300;
+    private MediaRecorder mediaRecorder;
+    private String audioFilePath;
+    private ImageView voiceRecordButton;
+    private boolean isRecording = false;
+    private boolean isRequestingPermission = false;
+
+    private Animation scaleAnimation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note_details);
+
+
+        scaleAnimation = AnimationUtils.loadAnimation(this, R.anim.scale_animation);
+        voiceRecordButton = findViewById(R.id.voice_record);
+
 
         noteDatabase = NoteDatabase.getDatabase(this);
         noteDao = noteDatabase.noteDao();
@@ -82,6 +109,22 @@ public class NoteDetailsActivity extends AppCompatActivity {
         nestedScrollView = findViewById(R.id.nestedScrollView);
         back();
 
+        voiceRecordButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                voiceRecordButton.startAnimation(scaleAnimation);
+                if (isRecording) {
+                    stopRecording();
+                } else {
+                    if (ContextCompat.checkSelfPermission(NoteDetailsActivity.this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                        isRequestingPermission = true;
+                        ActivityCompat.requestPermissions(NoteDetailsActivity.this, new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_RECORD_AUDIO_PERMISSION);
+                    } else {
+                        startRecording();
+                    }
+                }
+            }
+        });
         colorChange.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -124,6 +167,92 @@ public class NoteDetailsActivity extends AppCompatActivity {
         }
     }
 
+    private void startRecording() {
+        audioFilePath = getExternalFilesDir(null).getAbsolutePath() + "/audio.3gp";
+        mediaRecorder = new MediaRecorder();
+        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+        mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+        mediaRecorder.setOutputFile(audioFilePath);
+
+        try {
+            mediaRecorder.prepare();
+            mediaRecorder.start();
+            isRecording = true;
+            startSpeechRecognition();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Ошибка при начале записи", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_SPEECH_RECOGNIZER) {
+            if (resultCode == RESULT_OK && data != null) {
+                ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                if (matches != null && !matches.isEmpty()) {
+                    String recognizedText = matches.get(0);
+                    contentEditText.append(recognizedText + "\n");
+                }
+            }
+            // Проверяем, идет ли запись, и останавливаем её
+            if (isRecording) {
+                stopRecording();
+            }
+        }
+    }
+
+
+    private void stopRecording() {
+        if (mediaRecorder != null) {
+            try {
+                mediaRecorder.stop();
+                mediaRecorder.release();
+                mediaRecorder = null;
+                isRecording = false;
+            } catch (RuntimeException stopException) {
+                // Обработка исключения, если stop() вызвано в неправильном состоянии
+                mediaRecorder.release();
+                mediaRecorder = null;
+                isRecording = false;
+                Toast.makeText(this, "Ошибка при остановке записи", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+
+    private void startSpeechRecognition() {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Говорите что-нибудь");
+        try {
+            startActivityForResult(intent, REQUEST_SPEECH_RECOGNIZER);
+        } catch (Exception e) {
+            Toast.makeText(this, "Ошибка распознавания речи", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_RECORD_AUDIO_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (isRequestingPermission) {
+                    startRecording();
+                    isRequestingPermission = false;
+                }
+            } else {
+                Toast.makeText(this, "Разрешение на запись аудио не предоставлено", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_note_details, menu);
@@ -133,7 +262,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_background_color) {
-            deleteNote();
+            showDeleteConfirmationDialog();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -153,11 +282,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
         toolbarTitleEditText.setTextSize(fontSize);
     }
 
-    public void deleteNoteWithUndo(Note note, int position) {
-        // Удаляем заметку из списка и обновляем адаптер
-        noteList.remove(position);
-    }
-
     private void applyFontStyle(String fontStyle) {
         Typeface typeface = null;
         switch (fontStyle) {
@@ -172,6 +296,12 @@ public class NoteDetailsActivity extends AppCompatActivity {
                 break;
             case "Verdana":
                 typeface = ResourcesCompat.getFont(this, R.font.verdana);
+                break;
+            case "Comic Sans":
+                typeface = ResourcesCompat.getFont(this, R.font.comicsans);
+                break;
+            case "мЗаметки":
+                typeface = ResourcesCompat.getFont(this, R.font.montserratalternatesregular);
                 break;
             default:
                 typeface = Typeface.DEFAULT;
@@ -190,7 +320,15 @@ public class NoteDetailsActivity extends AppCompatActivity {
             case "Зеленый":
                 return getResources().getColor(R.color.green);
             case "Синий":
-                return getResources().getColor(R.color.blue);
+                return getResources().getColor(R.color.sin);
+            case "Серый":
+                return getResources().getColor(R.color.grey);
+            case "Фиолетовый":
+                return getResources().getColor(R.color.fiol);
+            case "Оранжевый":
+                return getResources().getColor(R.color.orange);
+            case "Желтый":
+                return getResources().getColor(R.color.yellow);
             default:
                 return getResources().getColor(R.color.black);
         }
@@ -335,12 +473,26 @@ public class NoteDetailsActivity extends AppCompatActivity {
         }).start();
     }
 
+    private int getNoteCount() {
+        int count = 0;
+        try {
+            count = noteDao.getNoteCount();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return count;
+    }
+
     private void saveNote() {
         String title = toolbarTitleEditText.getText().toString().trim();
         String content = contentEditText.getText().toString().trim();
 
-        if (title.isEmpty() || content.isEmpty()) {
-            Toast.makeText(this, "Введите заголовок и текст заметки", Toast.LENGTH_SHORT).show();
+        if (title.isEmpty()) {
+            title = "Заметка ";
+        }
+
+        if (content.isEmpty()) {
+            Toast.makeText(this, "Введите текст заметки", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -365,10 +517,27 @@ public class NoteDetailsActivity extends AppCompatActivity {
         }).start();
     }
 
+    private void showDeleteConfirmationDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AlertDialogCustom);
+        builder.setTitle("Удаление заметки");
+
+        // Создайте кастомный TextView
+        View view = getLayoutInflater().inflate(R.layout.dialog_message, null);
+        TextView messageTextView = view.findViewById(R.id.dialog_message);
+        messageTextView.setText("Вы действительно хотите удалить эту заметку?");
+
+        builder.setView(view);
+        builder.setIcon(R.drawable.delete6);
+        builder.setNegativeButton("Нет", null);
+        builder.setPositiveButton("Да", (dialog, whichButton) -> deleteNote());
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
     private void deleteNote() {
         if (noteId != -1) {
             new Thread(() -> {
-                Note note = noteDao.getNoteById(noteId);
                 noteDao.delete(noteDao.getNoteById(noteId));
                 runOnUiThread(() -> {
                     Toast.makeText(NoteDetailsActivity.this, "Заметка удалена", Toast.LENGTH_SHORT).show();
@@ -451,4 +620,5 @@ public class NoteDetailsActivity extends AppCompatActivity {
 
         dialog.show();
     }
+
 }

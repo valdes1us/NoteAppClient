@@ -6,5 +6,9 @@
         <item>Красный</item>
         <item>Зеленый</item>
         <item>Синий</item>
+        <item>Серый</item>
+        <item>Фиолетовый</item>
+        <item>Оранжевый</item>
+        <item>Желтый</item>
     </string-array>
 </resources>

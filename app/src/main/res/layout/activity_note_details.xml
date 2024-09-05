@@ -52,7 +52,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/toolbar"
-        android:layout_above="@id/toolbar_bottom">
+        android:layout_above="@id/voice_record">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -113,16 +113,14 @@
             android:layout_centerVertical="true"
             android:layout_toRightOf="@id/font_change"
             android:layout_toLeftOf="@id/color_change"
-/>
-
-
+            />
 
         <!-- Вторая иконка -->
         <ImageView
             android:id="@+id/color_change"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-           android:layout_centerInParent="true"
+            android:layout_centerInParent="true"
             android:src="@drawable/rgb"
             android:layout_centerVertical="true"
             android:contentDescription="Иконка 2" />
@@ -147,5 +145,18 @@
             android:layout_centerInParent="true"
             android:contentDescription="Иконка 2"
             android:layout_alignParentEnd="true" />
+
     </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/voice_record"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/microphone"
+        android:layout_marginBottom="10dp"
+        android:layout_centerHorizontal="true"
+        android:paddingTop="10dp"
+        android:layout_above="@id/toolbar_bottom"
+        android:contentDescription="Запись голоса" />
+
 </RelativeLayout>
