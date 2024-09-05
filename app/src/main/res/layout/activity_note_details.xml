@@ -86,6 +86,7 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
+
     <RelativeLayout
         android:id="@+id/toolbar_bottom"
         android:layout_width="match_parent"
@@ -148,15 +149,50 @@
 
     </RelativeLayout>
 
-    <ImageView
-        android:id="@+id/voice_record"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/microphone"
-        android:layout_marginBottom="10dp"
-        android:layout_centerHorizontal="true"
-        android:paddingTop="10dp"
-        android:layout_above="@id/toolbar_bottom"
-        android:contentDescription="Запись голоса" />
+    <!-- Горизонтальная серая линия -->
 
+
+    <RelativeLayout
+        android:id="@+id/toolbar_bottom2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/toolbar_bottom"
+        android:backgroundTint="#2e2e2e"
+        android:background="#2e2e2e"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/voice_record"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/microphone"
+            android:layout_centerHorizontal="true"
+            android:contentDescription="Запись голоса" />
+
+        <ImageView
+            android:id="@+id/share_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/share"
+            android:contentDescription="Поделиться"
+            android:layout_above="@id/toolbar_bottom"
+            android:layout_alignParentEnd="true"
+            android:layout_centerInParent="true" />
+
+        <ImageView
+            android:id="@+id/calendar_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/calendar"
+            android:contentDescription="Поделиться"
+            android:layout_above="@id/toolbar_bottom"
+            android:layout_alignParentStart="true"
+            android:layout_centerInParent="true" />
+    </RelativeLayout>
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_above="@id/toolbar_bottom"
+        android:background="#1f1f1f"/>
 </RelativeLayout>

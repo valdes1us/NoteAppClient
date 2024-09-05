@@ -2,8 +2,10 @@ package com.valdesius.noteapp;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
@@ -27,6 +29,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.widget.NestedScrollView;
 
@@ -41,6 +44,8 @@ import com.valdesius.noteapp.models.Note;
 import com.valdesius.noteapp.models.NoteDao;
 import com.valdesius.noteapp.models.NoteDatabase;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +54,11 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 
 public class NoteDetailsActivity extends AppCompatActivity {
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
     private int noteId = -1;
     private EditText toolbarTitleEditText;
     private EditText contentEditText;
@@ -76,15 +86,17 @@ public class NoteDetailsActivity extends AppCompatActivity {
 
     private Animation scaleAnimation;
 
+    private ImageView shareButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note_details);
 
-
         scaleAnimation = AnimationUtils.loadAnimation(this, R.anim.scale_animation);
         voiceRecordButton = findViewById(R.id.voice_record);
 
+        verifyStoragePermissions();
 
         noteDatabase = NoteDatabase.getDatabase(this);
         noteDao = noteDatabase.noteDao();
@@ -125,6 +137,16 @@ public class NoteDetailsActivity extends AppCompatActivity {
                 }
             }
         });
+
+        shareButton = findViewById(R.id.share_button);
+        shareButton.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                shareButton.startAnimation(scaleAnimation);
+                shareNote();
+            }
+        });
         colorChange.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -135,6 +157,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
         fontChange.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 showFontSizePicker();
             }
         });
@@ -149,6 +172,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
         bgChange.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                bgChange.startAnimation(scaleAnimation);
                 showBackgroundColorPicker();
             }
         });
@@ -156,6 +180,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
         listCreate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                listCreate.startAnimation(scaleAnimation);
                 showListPicker();
             }
         });
@@ -166,6 +191,49 @@ public class NoteDetailsActivity extends AppCompatActivity {
             loadNote();
         }
     }
+
+
+    private void shareNote() {
+        // Создание скриншота
+        View rootView = getWindow().getDecorView().findViewById(android.R.id.content);
+        Bitmap bitmap = getScreenShot(rootView);
+
+        // Сохранение скриншота во временный файл
+        File file = saveBitmapToFile(bitmap);
+
+        // Отправка скриншота через Intent
+        Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".provider", file);
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("image/png");
+        shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+        shareIntent.putExtra(Intent.EXTRA_TEXT, "Поделиться заметкой");
+        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        startActivity(Intent.createChooser(shareIntent, "Поделиться через"));
+    }
+
+
+
+
+
+    private Bitmap getScreenShot(View view) {
+        view.setDrawingCacheEnabled(true);
+        Bitmap bitmap = Bitmap.createBitmap(view.getDrawingCache());
+        view.setDrawingCacheEnabled(false);
+        return bitmap;
+    }
+
+
+
+    private File saveBitmapToFile(Bitmap bitmap) {
+        File file = new File(getExternalFilesDir(null), "screenshot.png");
+        try (FileOutputStream out = new FileOutputStream(file)) {
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return file;
+    }
+
 
     private void startRecording() {
         audioFilePath = getExternalFilesDir(null).getAbsolutePath() + "/audio.3gp";
@@ -219,7 +287,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
                 mediaRecorder = null;
                 isRecording = false;
                 Toast.makeText(this, "Ошибка при остановке записи", Toast.LENGTH_SHORT).show();
-            }
+                }
         }
     }
 
@@ -237,10 +305,35 @@ public class NoteDetailsActivity extends AppCompatActivity {
     }
 
 
+    private void verifyStoragePermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // На Android 10 и выше не нужно запрашивать разрешения на чтение/запись
+            return;
+        }
+
+        int readPermission = ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+        int writePermission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (readPermission != PackageManager.PERMISSION_GRANTED || writePermission != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                    this,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == REQUEST_EXTERNAL_STORAGE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Разрешение предоставлено
+            } else {
+                Toast.makeText(this, "Разрешение на доступ к хранилищу не предоставлено", Toast.LENGTH_SHORT).show();
+            }
+        }
         if (requestCode == REQUEST_RECORD_AUDIO_PERMISSION) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 if (isRequestingPermission) {
@@ -252,6 +345,8 @@ public class NoteDetailsActivity extends AppCompatActivity {
             }
         }
     }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -620,5 +715,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
 
         dialog.show();
     }
+
+
 
 }
