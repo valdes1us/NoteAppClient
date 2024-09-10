@@ -52,7 +52,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/toolbar"
-        android:layout_above="@id/voice_record">
+        android:layout_above="@id/toolbar_bottom2"
+        tools:ignore="NotSibling">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -101,7 +102,7 @@
             android:layout_width="wrap_content"
             android:layout_centerInParent="true"
             android:layout_height="wrap_content"
-            android:src="@drawable/font"
+            android:src="@drawable/textsize"
             android:contentDescription="Иконка 1"
             android:layout_alignParentStart="true" />
 
@@ -170,15 +171,46 @@
             android:contentDescription="Запись голоса" />
 
         <ImageView
+            android:id="@+id/laod_create"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/clip"
+            android:contentDescription="Иконка 1"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/calendar_button"
+            android:layout_toLeftOf="@id/voice_record"
+            />
+
+        <ImageView
+            android:id="@+id/draw_create"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/pencil"
+            android:contentDescription="Иконка 1"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/voice_record"
+            android:layout_toLeftOf="@id/share_button"
+            />
+
+        <ImageView
+            android:id="@+id/load_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/clip"
+            android:layout_above="@id/toolbar_bottom"
+   android:layout_toRightOf="@id/voice_record"
+            android:layout_toLeftOf="@id/calendar_button"
+            tools:ignore="NotSibling" />
+
+        <ImageView
             android:id="@+id/share_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/share"
-            android:contentDescription="Поделиться"
-            android:layout_above="@id/toolbar_bottom"
+            android:contentDescription="Иконка 1"
+            android:layout_centerVertical="true"
             android:layout_alignParentEnd="true"
-            android:layout_centerInParent="true" />
-
+            />
         <ImageView
             android:id="@+id/calendar_button"
             android:layout_width="wrap_content"
@@ -187,7 +219,8 @@
             android:contentDescription="Поделиться"
             android:layout_above="@id/toolbar_bottom"
             android:layout_alignParentStart="true"
-            android:layout_centerInParent="true" />
+            android:layout_centerInParent="true"
+            tools:ignore="NotSibling" />
     </RelativeLayout>
     <View
         android:id="@+id/divider"

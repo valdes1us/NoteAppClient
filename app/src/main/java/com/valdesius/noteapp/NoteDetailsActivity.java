@@ -1,5 +1,10 @@
 package com.valdesius.noteapp;
 
+import android.Manifest;
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -8,6 +13,7 @@ import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.CalendarContract;
 import android.speech.RecognizerIntent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -17,10 +23,12 @@ import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -33,8 +41,6 @@ import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.widget.NestedScrollView;
 
-import com.google.android.material.bottomsheet.BottomSheetDialog;
-import com.google.android.material.snackbar.Snackbar;
 import com.valdesius.noteapp.helpers.ColorAdapter;
 import com.valdesius.noteapp.helpers.FontColorAdapter;
 import com.valdesius.noteapp.helpers.FontSizeAdapter;
@@ -47,11 +53,11 @@ import com.valdesius.noteapp.models.NoteDatabase;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Calendar;
 import java.util.Locale;
-import android.Manifest;
-import android.content.pm.PackageManager;
+import java.util.TimeZone;
 
 public class NoteDetailsActivity extends AppCompatActivity {
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
@@ -87,6 +93,17 @@ public class NoteDetailsActivity extends AppCompatActivity {
     private Animation scaleAnimation;
 
     private ImageView shareButton;
+    private ImageView calendarButton;
+    private Calendar selectedDateTime;
+
+    private static final int REQUEST_CALENDAR_PERMISSION = 100;
+
+    private void requestCalendarPermissions() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR}, REQUEST_CALENDAR_PERMISSION);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -185,6 +202,15 @@ public class NoteDetailsActivity extends AppCompatActivity {
             }
         });
 
+        calendarButton = findViewById(R.id.calendar_button);
+        calendarButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                requestCalendarPermissions();
+                showDateTimePicker();
+            }
+        });
+
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra("note_id")) {
             noteId = intent.getIntExtra("note_id", -1);
@@ -192,6 +218,58 @@ public class NoteDetailsActivity extends AppCompatActivity {
         }
     }
 
+    private void updateDateTimeUI() {
+        if (selectedDateTime != null) {
+            String formattedDateTime = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(selectedDateTime.getTime());
+            Toast.makeText(NoteDetailsActivity.this, "Напоминание установлено на " + formattedDateTime, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void addEventToCalendar(Calendar calendar) {
+        ContentResolver cr = getContentResolver();
+        ContentValues values = new ContentValues();
+        values.put(CalendarContract.Events.DTSTART, calendar.getTimeInMillis());
+        values.put(CalendarContract.Events.DTEND, calendar.getTimeInMillis() + 60 * 60 * 1000); // Длительность события 1 час
+        values.put(CalendarContract.Events.TITLE, "Напоминание о заметке");
+        values.put(CalendarContract.Events.DESCRIPTION, contentEditText.getText().toString());
+        values.put(CalendarContract.Events.CALENDAR_ID, 1); // ID календаря, обычно 1 для основного календаря
+        values.put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().getID());
+
+        Uri uri = cr.insert(CalendarContract.Events.CONTENT_URI, values);
+        if (uri != null) {
+            Toast.makeText(this, "Событие добавлено в календарь", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Ошибка при добавлении события в календарь", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showDateTimePicker() {
+        final Calendar calendar = Calendar.getInstance();
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this, R.style.AppTheme_Dark_Calendar, new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                calendar.set(Calendar.YEAR, year);
+                calendar.set(Calendar.MONTH, month);
+                calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+                showTimePicker(calendar);
+            }
+        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+        datePickerDialog.show();
+    }
+
+    private void showTimePicker(final Calendar calendar) {
+        TimePickerDialog timePickerDialog = new TimePickerDialog(this, R.style.AppTheme_Dark_Calendar_Clock, new TimePickerDialog.OnTimeSetListener() {
+            @Override
+            public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+                calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                calendar.set(Calendar.MINUTE, minute);
+                selectedDateTime = calendar;
+                addEventToCalendar(calendar);
+                updateDateTimeUI();
+            }
+        }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
+        timePickerDialog.show();
+    }
 
     private void shareNote() {
         // Создание скриншота
@@ -211,18 +289,12 @@ public class NoteDetailsActivity extends AppCompatActivity {
         startActivity(Intent.createChooser(shareIntent, "Поделиться через"));
     }
 
-
-
-
-
     private Bitmap getScreenShot(View view) {
         view.setDrawingCacheEnabled(true);
         Bitmap bitmap = Bitmap.createBitmap(view.getDrawingCache());
         view.setDrawingCacheEnabled(false);
         return bitmap;
     }
-
-
 
     private File saveBitmapToFile(Bitmap bitmap) {
         File file = new File(getExternalFilesDir(null), "screenshot.png");
@@ -233,7 +305,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
         }
         return file;
     }
-
 
     private void startRecording() {
         audioFilePath = getExternalFilesDir(null).getAbsolutePath() + "/audio.3gp";
@@ -273,7 +344,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
         }
     }
 
-
     private void stopRecording() {
         if (mediaRecorder != null) {
             try {
@@ -287,10 +357,9 @@ public class NoteDetailsActivity extends AppCompatActivity {
                 mediaRecorder = null;
                 isRecording = false;
                 Toast.makeText(this, "Ошибка при остановке записи", Toast.LENGTH_SHORT).show();
-                }
+            }
         }
     }
-
 
     private void startSpeechRecognition() {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -303,7 +372,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
             Toast.makeText(this, "Ошибка распознавания речи", Toast.LENGTH_SHORT).show();
         }
     }
-
 
     private void verifyStoragePermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -344,8 +412,15 @@ public class NoteDetailsActivity extends AppCompatActivity {
                 Toast.makeText(this, "Разрешение на запись аудио не предоставлено", Toast.LENGTH_SHORT).show();
             }
         }
-    }
 
+        if (requestCode == REQUEST_CALENDAR_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Разрешение предоставлено
+            } else {
+                Toast.makeText(this, "Разрешение на доступ к календарю не предоставлено", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
 
 
     @Override
@@ -715,7 +790,5 @@ public class NoteDetailsActivity extends AppCompatActivity {
 
         dialog.show();
     }
-
-
 
 }
