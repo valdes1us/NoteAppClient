@@ -16,7 +16,6 @@
         android:elevation="4dp"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
-        <!-- Контейнер для кнопки и заголовка -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -44,7 +43,9 @@
                 android:textColorHint="#CCCCCC"
                 android:background="@android:color/transparent"
                 style="@style/CustomEditText"/>
+
         </LinearLayout>
+
     </androidx.appcompat.widget.Toolbar>
 
     <androidx.core.widget.NestedScrollView
@@ -52,26 +53,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/toolbar"
-        android:layout_above="@id/toolbar_bottom2"
+        android:layout_above="@id/toolbar_bottom"
         tools:ignore="NotSibling">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-
-            <EditText
-                android:id="@+id/titleEditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="5dp"
-                android:background="@android:color/transparent"
-                android:hint="Название"
-                android:padding="16dp"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#CCCCCC"
-                style="@style/CustomEditText"
-                android:visibility="gone"/>
 
             <EditText
                 android:id="@+id/contentEditText"
@@ -87,145 +75,109 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-
     <RelativeLayout
         android:id="@+id/toolbar_bottom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:background="#2e2e2e"
-        android:padding="16dp">
+        android:paddingBottom="16dp"
+        android:paddingTop="16dp">
 
-        <!-- Первая иконка -->
-        <ImageView
-            android:id="@+id/font_change"
-            android:layout_width="wrap_content"
-            android:layout_centerInParent="true"
+        <HorizontalScrollView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:src="@drawable/textsize"
-            android:contentDescription="Иконка 1"
-            android:layout_alignParentStart="true" />
 
-        <ImageView
-            android:id="@+id/bg_change"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/bucket"
-            android:contentDescription="Иконка 1"
-            android:layout_centerVertical="true"
-            android:layout_toRightOf="@id/font_change"
-            android:layout_toLeftOf="@id/color_change"
-            />
+            android:scrollbars="none">
 
-        <!-- Вторая иконка -->
-        <ImageView
-            android:id="@+id/color_change"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:src="@drawable/rgb"
-            android:layout_centerVertical="true"
-            android:contentDescription="Иконка 2" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-        <!-- Spinner для выбора цвета -->
-        <ImageView
-            android:id="@+id/list_create"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/list"
-            android:contentDescription="Иконка 1"
-            android:layout_centerVertical="true"
-            android:layout_toRightOf="@id/color_change"
-            android:layout_toLeftOf="@id/font_style_change"
-            />
+                <!-- Первая иконка -->
+                <ImageView
+                    android:id="@+id/font_change"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/textsize"
+                    android:contentDescription="Иконка 1"
+                    android:paddingStart="10dp"
+                    android:layout_marginEnd="16dp" />
+                <ImageView
+                    android:id="@+id/color_change"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/rgb"
+                    android:contentDescription="Иконка 2"
+                    android:layout_marginEnd="16dp" />
 
-        <ImageView
-            android:id="@+id/font_style_change"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/feather"
-            android:layout_centerInParent="true"
-            android:contentDescription="Иконка 2"
-            android:layout_alignParentEnd="true" />
+                <ImageView
+                    android:id="@+id/font_style_change"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/feather"
+                    android:contentDescription="Иконка 2"
+                    android:layout_marginEnd="16dp" />
 
+                <ImageView
+                    android:id="@+id/list_create"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/list"
+                    android:contentDescription="Иконка 1"
+                    android:layout_marginEnd="16dp" />
+
+                <ImageView
+                    android:id="@+id/voice_record"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/microphone"
+                    android:layout_centerHorizontal="true"
+                    android:contentDescription="Запись голоса"
+                    android:layout_marginEnd="16dp" />
+                <ImageView
+                    android:id="@+id/bg_change"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/bucket"
+                    android:contentDescription="Иконка 1"
+                    android:layout_marginEnd="16dp" />
+
+                <ImageView
+                    android:id="@+id/calendar_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/calendar"
+                    android:contentDescription="Календарь"
+                    android:layout_marginEnd="16dp" />
+
+
+
+                <ImageView
+                    android:id="@+id/load_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/clip"
+                    android:layout_above="@id/toolbar_bottom"
+                    android:layout_toRightOf="@id/voice_record"
+                    android:layout_toLeftOf="@id/calendar_button"
+                    tools:ignore="NotSibling"
+                    android:layout_marginEnd="16dp" />
+
+                <ImageView
+                    android:id="@+id/share_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/share"
+                    android:contentDescription="Иконка 1"
+                    android:layout_marginEnd="10dp"
+                     />
+            </LinearLayout>
+        </HorizontalScrollView>
     </RelativeLayout>
 
     <!-- Горизонтальная серая линия -->
 
-
-    <RelativeLayout
-        android:id="@+id/toolbar_bottom2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/toolbar_bottom"
-        android:backgroundTint="#2e2e2e"
-        android:background="#2e2e2e"
-        android:padding="16dp">
-
-        <ImageView
-            android:id="@+id/voice_record"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/microphone"
-            android:layout_centerHorizontal="true"
-            android:contentDescription="Запись голоса" />
-
-        <ImageView
-            android:id="@+id/laod_create"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/clip"
-            android:contentDescription="Иконка 1"
-            android:layout_centerVertical="true"
-            android:layout_toRightOf="@id/calendar_button"
-            android:layout_toLeftOf="@id/voice_record"
-            />
-
-        <ImageView
-            android:id="@+id/draw_create"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/pencil"
-            android:contentDescription="Иконка 1"
-            android:layout_centerVertical="true"
-            android:layout_toRightOf="@id/voice_record"
-            android:layout_toLeftOf="@id/share_button"
-            />
-
-        <ImageView
-            android:id="@+id/load_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/clip"
-            android:layout_above="@id/toolbar_bottom"
-   android:layout_toRightOf="@id/voice_record"
-            android:layout_toLeftOf="@id/calendar_button"
-            tools:ignore="NotSibling" />
-
-        <ImageView
-            android:id="@+id/share_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/share"
-            android:contentDescription="Иконка 1"
-            android:layout_centerVertical="true"
-            android:layout_alignParentEnd="true"
-            />
-        <ImageView
-            android:id="@+id/calendar_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/calendar"
-            android:contentDescription="Поделиться"
-            android:layout_above="@id/toolbar_bottom"
-            android:layout_alignParentStart="true"
-            android:layout_centerInParent="true"
-            tools:ignore="NotSibling" />
-    </RelativeLayout>
-    <View
-        android:id="@+id/divider"
-        android:layout_width="match_parent"
-        android:layout_height="2dp"
-        android:layout_above="@id/toolbar_bottom"
-        android:background="#1f1f1f"/>
 </RelativeLayout>

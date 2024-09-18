@@ -5,9 +5,11 @@ import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.media.MediaRecorder;
 import android.net.Uri;
@@ -27,6 +29,7 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
@@ -58,6 +61,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
+
 
 public class NoteDetailsActivity extends AppCompatActivity {
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
@@ -95,6 +99,8 @@ public class NoteDetailsActivity extends AppCompatActivity {
     private ImageView shareButton;
     private ImageView calendarButton;
     private Calendar selectedDateTime;
+
+    private ImageView drawingButton;
 
     private static final int REQUEST_CALENDAR_PERMISSION = 100;
 
@@ -154,6 +160,8 @@ public class NoteDetailsActivity extends AppCompatActivity {
                 }
             }
         });
+
+
 
         shareButton = findViewById(R.id.share_button);
         shareButton.setOnClickListener(new View.OnClickListener() {
@@ -218,6 +226,11 @@ public class NoteDetailsActivity extends AppCompatActivity {
         }
     }
 
+
+
+
+
+    private static final int REQUEST_DRAWING = 400;
     private void updateDateTimeUI() {
         if (selectedDateTime != null) {
             String formattedDateTime = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(selectedDateTime.getTime());
@@ -237,6 +250,14 @@ public class NoteDetailsActivity extends AppCompatActivity {
 
         Uri uri = cr.insert(CalendarContract.Events.CONTENT_URI, values);
         if (uri != null) {
+            // Добавление напоминания
+            long eventId = Long.parseLong(uri.getLastPathSegment());
+            ContentValues reminderValues = new ContentValues();
+            reminderValues.put(CalendarContract.Reminders.EVENT_ID, eventId);
+            reminderValues.put(CalendarContract.Reminders.METHOD, CalendarContract.Reminders.METHOD_ALERT);
+            reminderValues.put(CalendarContract.Reminders.MINUTES, 15); // Напоминание за 15 минут до события
+            cr.insert(CalendarContract.Reminders.CONTENT_URI, reminderValues);
+
             Toast.makeText(this, "Событие добавлено в календарь", Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(this, "Ошибка при добавлении события в календарь", Toast.LENGTH_SHORT).show();
@@ -341,8 +362,13 @@ public class NoteDetailsActivity extends AppCompatActivity {
             if (isRecording) {
                 stopRecording();
             }
+
         }
+
+
     }
+
+
 
     private void stopRecording() {
         if (mediaRecorder != null) {
@@ -422,7 +448,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
         }
     }
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_note_details, menu);
@@ -481,82 +506,14 @@ public class NoteDetailsActivity extends AppCompatActivity {
         toolbarTitleEditText.setTypeface(typeface);
     }
 
-    private int getColorForString(String colorString) {
-        switch (colorString) {
-            case "Белый":
-                return getResources().getColor(R.color.white);
-            case "Красный":
-                return getResources().getColor(R.color.red);
-            case "Зеленый":
-                return getResources().getColor(R.color.green);
-            case "Синий":
-                return getResources().getColor(R.color.sin);
-            case "Серый":
-                return getResources().getColor(R.color.grey);
-            case "Фиолетовый":
-                return getResources().getColor(R.color.fiol);
-            case "Оранжевый":
-                return getResources().getColor(R.color.orange);
-            case "Желтый":
-                return getResources().getColor(R.color.yellow);
-            default:
-                return getResources().getColor(R.color.black);
-        }
-    }
+
 
     private void showBackgroundColorPicker() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        View view = getLayoutInflater().inflate(R.layout.dialog_background_color_picker, null);
-        builder.setView(view);
-
-        ListView colorList = view.findViewById(R.id.color_list);
-        String[] colors = getResources().getStringArray(R.array.background_colors);
-
-        ColorAdapter adapter = new ColorAdapter(this, android.R.layout.simple_list_item_1, colors);
-        colorList.setAdapter(adapter);
-
-        AlertDialog dialog = builder.create();
-
-        colorList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String selectedColor = colors[position];
-                int color = getColorForString(selectedColor);
-                nestedScrollView.setBackgroundColor(color);
-                currentBackgroundColor = selectedColor;
-                dialog.dismiss();
-            }
-        });
-
-        dialog.show();
+        showColorPickerDialog(true);
     }
 
     private void showFontColorPicker() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        View view = getLayoutInflater().inflate(R.layout.dialog_font_color_picker, null);
-        builder.setView(view);
-
-        ListView colorList = view.findViewById(R.id.font_color_list);
-        String[] colors = getResources().getStringArray(R.array.font_colors);
-
-        FontColorAdapter adapter = new FontColorAdapter(this, android.R.layout.simple_list_item_1, colors);
-        colorList.setAdapter(adapter);
-
-        AlertDialog dialog = builder.create();
-
-        colorList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String selectedColor = colors[position];
-                int color = getColorForString(selectedColor);
-                contentEditText.setTextColor(color);
-                toolbarTitleEditText.setTextColor(color);
-                currentFontColor = selectedColor;
-                dialog.dismiss();
-            }
-        });
-
-        dialog.show();
+        showColorPickerDialog(false);
     }
 
     private void showFontSizePicker() {
@@ -612,47 +569,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void loadNote() {
-        new Thread(() -> {
-            Note note = noteDao.getNoteById(noteId);
-            runOnUiThread(() -> {
-                if (note != null) {
-                    toolbarTitleEditText.setText(note.getTitle());
-                    contentEditText.setText(note.getContent());
-                    if (note.getBackgroundColor() != null) {
-                        int color = getColorForString(note.getBackgroundColor());
-                        nestedScrollView.setBackgroundColor(color);
-                        currentBackgroundColor = note.getBackgroundColor();
-                    }
-                    if (note.getFontColor() != null) {
-                        int color = getColorForString(note.getFontColor());
-                        contentEditText.setTextColor(color);
-                        toolbarTitleEditText.setTextColor(color);
-                        currentFontColor = note.getFontColor();
-                    }
-                    if (note.getFontSize() != 0) {
-                        currentFontSize = note.getFontSize();
-                        applyFontSize(currentFontSize);
-                    }
-                    if (note.getFontStyle() != null) {
-                        currentFontStyle = note.getFontStyle();
-                        applyFontStyle(currentFontStyle);
-                    }
-                }
-            });
-        }).start();
-    }
-
-    private int getNoteCount() {
-        int count = 0;
-        try {
-            count = noteDao.getNoteCount();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return count;
-    }
-
     private void saveNote() {
         String title = toolbarTitleEditText.getText().toString().trim();
         String content = contentEditText.getText().toString().trim();
@@ -686,6 +602,124 @@ public class NoteDetailsActivity extends AppCompatActivity {
             });
         }).start();
     }
+
+    private void loadNote() {
+        new Thread(() -> {
+            Note note = noteDao.getNoteById(noteId);
+            runOnUiThread(() -> {
+                if (note != null) {
+                    toolbarTitleEditText.setText(note.getTitle());
+                    contentEditText.setText(note.getContent());
+                    if (note.getBackgroundColor() != null) {
+                        int color = getColorForString(note.getBackgroundColor());
+                        nestedScrollView.setBackgroundColor(color);
+                        currentBackgroundColor = note.getBackgroundColor();
+                    }
+                    if (note.getFontColor() != null) {
+                        int color = getColorForString(note.getFontColor());
+                        contentEditText.setTextColor(color);
+                        toolbarTitleEditText.setTextColor(color);
+                        currentFontColor = note.getFontColor();
+                    }
+                    if (note.getFontSize() != 0) {
+                        currentFontSize = note.getFontSize();
+                        applyFontSize(currentFontSize);
+                    }
+                    if (note.getFontStyle() != null) {
+                        currentFontStyle = note.getFontStyle();
+                        applyFontStyle(currentFontStyle);
+                    }
+                }
+            });
+        }).start();
+    }
+
+    private void showColorPickerDialog(final boolean isBackgroundColor) {
+        final int[] selectedColor = {Color.BLACK};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Выберите цвет");
+
+        View view = getLayoutInflater().inflate(R.layout.dialog_color_picker, null);
+        final SeekBar redSeekBar = view.findViewById(R.id.redSeekBar);
+        final SeekBar greenSeekBar = view.findViewById(R.id.greenSeekBar);
+        final SeekBar blueSeekBar = view.findViewById(R.id.blueSeekBar);
+
+        redSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                selectedColor[0] = Color.rgb(progress, greenSeekBar.getProgress(), blueSeekBar.getProgress());
+                updateColorPreview(view, selectedColor[0]);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        greenSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                selectedColor[0] = Color.rgb(redSeekBar.getProgress(), progress, blueSeekBar.getProgress());
+                updateColorPreview(view, selectedColor[0]);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        blueSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                selectedColor[0] = Color.rgb(redSeekBar.getProgress(), greenSeekBar.getProgress(), progress);
+                updateColorPreview(view, selectedColor[0]);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        builder.setView(view);
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (isBackgroundColor) {
+                    nestedScrollView.setBackgroundColor(selectedColor[0]);
+                    currentBackgroundColor = "#" + Integer.toHexString(selectedColor[0]);
+                } else {
+                    contentEditText.setTextColor(selectedColor[0]);
+                    toolbarTitleEditText.setTextColor(selectedColor[0]);
+                    currentFontColor = "#" + Integer.toHexString(selectedColor[0]);
+                }
+            }
+        });
+        builder.setNegativeButton("Отмена", null);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    private void updateColorPreview(View view, int color) {
+        View colorPreview = view.findViewById(R.id.colorPreview);
+        colorPreview.setBackgroundColor(color);
+    }
+
+    private int getColorForString(String colorString) {
+        try {
+            return Color.parseColor(colorString);
+        } catch (IllegalArgumentException e) {
+            return getResources().getColor(R.color.black);
+        }
+    }
+
 
     private void showDeleteConfirmationDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AlertDialogCustom);

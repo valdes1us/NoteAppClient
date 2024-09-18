@@ -1,39 +1,38 @@
 <resources>
     <string name="app_name">мЗаметки</string>
-        <string-array name="font_colors">
-            <item>Черный</item>
-            <item>Белый</item>
-            <item>Красный</item>
-            <item>Зеленый</item>
-            <item>Синий</item>
-            <item>Желтый</item>
-        </string-array>
-        <string-array name="font_sizes">
-            <item>14</item>
-            <item>16</item>
-            <item>18</item>
-            <item>20</item>
-            <item>22</item>
-            <item>24</item>
-            <item>26</item>
-            <item>28</item>
-            <item>30</item>
-        </string-array>
+    <string-array name="font_colors">
+        <item>Черный</item>
+        <item>Белый</item>
+        <item>Красный</item>
+        <item>Зеленый</item>
+        <item>Синий</item>
+        <item>Желтый</item>
+    </string-array>
+    <string-array name="font_sizes">
+        <item>14</item>
+        <item>16</item>
+        <item>18</item>
+        <item>20</item>
+        <item>22</item>
+        <item>24</item>
+        <item>26</item>
+        <item>28</item>
+        <item>30</item>
+    </string-array>
 
-        <string-array name="font_styles">
-            <item>Arial</item>
-            <item>Times New Roman</item>
-            <item>Courier</item>
-            <item>Verdana</item>
-            <item>Comic Sans</item>
-            <item>мЗаметки</item>
-        </string-array>
+    <string-array name="font_styles">
+        <item>Arial</item>
+        <item>Times New Roman</item>
+        <item>Courier</item>
+        <item>Verdana</item>
+        <item>Comic Sans</item>
+        <item>мЗаметки</item>
+    </string-array>
 
     <string-array name="list_picker">
         <item>Маркированный список</item>
         <item>Нумерованный список</item>
     </string-array>
-
 
 
 </resources>

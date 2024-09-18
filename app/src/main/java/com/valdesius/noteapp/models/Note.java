@@ -13,6 +13,7 @@ public class Note {
     private String fontColor;
     private float fontSize;
     private String fontStyle; // Новое поле для стиля шрифта
+    private String drawingPath;
 
     // Конструкторы, геттеры и сеттеры
 
@@ -93,5 +94,13 @@ public class Note {
 
     public void setFontStyle(String fontStyle) {
         this.fontStyle = fontStyle;
+    }
+
+    public String getDrawingPath() {
+        return drawingPath;
+    }
+
+    public void setDrawingPath(String drawingPath) {
+        this.drawingPath = drawingPath;
     }
 }
