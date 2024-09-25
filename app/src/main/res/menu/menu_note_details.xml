@@ -3,6 +3,6 @@
     <item
         android:id="@+id/menu_background_color"
         android:title="Выбрать фон"
-        android:icon="@drawable/delete"
+        android:icon="@drawable/trash_bin_minimalistic_svgrepo_com"
         app:showAsAction="always" />
 </menu>

@@ -2,6 +2,7 @@ package com.valdesius.noteapp.helpers;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +10,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.valdesius.noteapp.MainActivity;
@@ -22,11 +24,11 @@ public class NoteListRecyclerViewHelper extends RecyclerView.Adapter<NoteListRec
     private List<Note> noteList;
     private Context context;
 
-
     public NoteListRecyclerViewHelper(List<Note> noteList, Context context) {
         this.noteList = noteList;
         this.context = context;
     }
+
     public void updateNoteList(List<Note> newNoteList) {
         this.noteList = newNoteList;
         notifyDataSetChanged(); // Обновляем отображение RecyclerView
@@ -44,6 +46,22 @@ public class NoteListRecyclerViewHelper extends RecyclerView.Adapter<NoteListRec
         holder.titleTextView.setText(note.getTitle());
         holder.contentTextView.setText(note.getContent());
 
+        // Устанавливаем фон для CardView
+        if (note.getBackgroundColor() != null) {
+            holder.cardView.setCardBackgroundColor(Color.parseColor(note.getBackgroundColor()));
+        } else {
+            holder.cardView.setCardBackgroundColor(Color.parseColor("#333333")); // По умолчанию
+        }
+
+        // Устанавливаем цвет шрифта
+        if (note.getFontColor() != null) {
+            holder.titleTextView.setTextColor(Color.parseColor(note.getFontColor()));
+            holder.contentTextView.setTextColor(Color.parseColor(note.getFontColor()));
+        } else {
+            holder.titleTextView.setTextColor(Color.parseColor("#FFFFFF")); // По умолчанию
+            holder.contentTextView.setTextColor(Color.parseColor("#FFFFFF")); // По умолчанию
+        }
+
         // Обработка клика на элементе списка
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -58,7 +76,6 @@ public class NoteListRecyclerViewHelper extends RecyclerView.Adapter<NoteListRec
         });
     }
 
-
     @Override
     public int getItemCount() {
         return noteList.size();
@@ -67,11 +84,13 @@ public class NoteListRecyclerViewHelper extends RecyclerView.Adapter<NoteListRec
     class NoteViewHolder extends RecyclerView.ViewHolder {
         TextView titleTextView;
         TextView contentTextView;
+        CardView cardView;
 
         public NoteViewHolder(View itemView) {
             super(itemView);
             titleTextView = itemView.findViewById(R.id.note_title);
             contentTextView = itemView.findViewById(R.id.note_body);
+            cardView = itemView.findViewById(R.id.card_view);
         }
     }
 }

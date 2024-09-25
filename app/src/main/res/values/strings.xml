@@ -27,6 +27,11 @@
         <item>Verdana</item>
         <item>Comic Sans</item>
         <item>мЗаметки</item>
+        <item>Cataneo</item>
+        <item>Futuris</item>
+        <item>Helvetika</item>
+        <item>Kelson</item>
+
     </string-array>
 
     <string-array name="list_picker">

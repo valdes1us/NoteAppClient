@@ -9,13 +9,19 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.graphics.pdf.PdfDocument;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.CalendarContract;
+import android.provider.MediaStore;
+import android.provider.Settings;
 import android.speech.RecognizerIntent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -44,8 +50,6 @@ import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.widget.NestedScrollView;
 
-import com.valdesius.noteapp.helpers.ColorAdapter;
-import com.valdesius.noteapp.helpers.FontColorAdapter;
 import com.valdesius.noteapp.helpers.FontSizeAdapter;
 import com.valdesius.noteapp.helpers.FontStyleAdapter;
 import com.valdesius.noteapp.helpers.ListAdapter;
@@ -56,6 +60,7 @@ import com.valdesius.noteapp.models.NoteDatabase;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -69,6 +74,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
+    private ImageView saveAsPdfButton;
     private int noteId = -1;
     private EditText toolbarTitleEditText;
     private EditText contentEditText;
@@ -119,7 +125,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
         scaleAnimation = AnimationUtils.loadAnimation(this, R.anim.scale_animation);
         voiceRecordButton = findViewById(R.id.voice_record);
 
-        verifyStoragePermissions();
+
 
         noteDatabase = NoteDatabase.getDatabase(this);
         noteDao = noteDatabase.noteDao();
@@ -128,7 +134,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark3));
         }
-
+verifyStoragePermissions();
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("");
@@ -143,6 +149,8 @@ public class NoteDetailsActivity extends AppCompatActivity {
         listCreate = findViewById(R.id.list_create); // Инициализация кнопки для создания маркерованного списка
         nestedScrollView = findViewById(R.id.nestedScrollView);
         back();
+
+
 
         voiceRecordButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -160,7 +168,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
                 }
             }
         });
-
 
 
         shareButton = findViewById(R.id.share_button);
@@ -227,10 +234,8 @@ public class NoteDetailsActivity extends AppCompatActivity {
     }
 
 
-
-
-
     private static final int REQUEST_DRAWING = 400;
+
     private void updateDateTimeUI() {
         if (selectedDateTime != null) {
             String formattedDateTime = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(selectedDateTime.getTime());
@@ -369,7 +374,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
     }
 
 
-
     private void stopRecording() {
         if (mediaRecorder != null) {
             try {
@@ -399,54 +403,10 @@ public class NoteDetailsActivity extends AppCompatActivity {
         }
     }
 
-    private void verifyStoragePermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            // На Android 10 и выше не нужно запрашивать разрешения на чтение/запись
-            return;
-        }
 
-        int readPermission = ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
-        int writePermission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
-        if (readPermission != PackageManager.PERMISSION_GRANTED || writePermission != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(
-                    this,
-                    PERMISSIONS_STORAGE,
-                    REQUEST_EXTERNAL_STORAGE
-            );
-        }
-    }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if (requestCode == REQUEST_EXTERNAL_STORAGE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Разрешение предоставлено
-            } else {
-                Toast.makeText(this, "Разрешение на доступ к хранилищу не предоставлено", Toast.LENGTH_SHORT).show();
-            }
-        }
-        if (requestCode == REQUEST_RECORD_AUDIO_PERMISSION) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if (isRequestingPermission) {
-                    startRecording();
-                    isRequestingPermission = false;
-                }
-            } else {
-                Toast.makeText(this, "Разрешение на запись аудио не предоставлено", Toast.LENGTH_SHORT).show();
-            }
-        }
-
-        if (requestCode == REQUEST_CALENDAR_PERMISSION) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Разрешение предоставлено
-            } else {
-                Toast.makeText(this, "Разрешение на доступ к календарю не предоставлено", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -498,6 +458,18 @@ public class NoteDetailsActivity extends AppCompatActivity {
             case "мЗаметки":
                 typeface = ResourcesCompat.getFont(this, R.font.montserratalternatesregular);
                 break;
+            case "Cataneo":
+                typeface = ResourcesCompat.getFont(this, R.font.cataneo);
+                break;
+            case "Futuris":
+                typeface = ResourcesCompat.getFont(this, R.font.futuris);
+                break;
+            case "Helvetika":
+                typeface = ResourcesCompat.getFont(this, R.font.helvetikacmprs);
+                break;
+            case "Kelson":
+                typeface = ResourcesCompat.getFont(this, R.font.kelson);
+                break;
             default:
                 typeface = Typeface.DEFAULT;
                 break;
@@ -505,7 +477,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
         contentEditText.setTypeface(typeface);
         toolbarTitleEditText.setTypeface(typeface);
     }
-
 
 
     private void showBackgroundColorPicker() {
@@ -653,10 +624,12 @@ public class NoteDetailsActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {}
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {}
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
         });
 
         greenSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -667,10 +640,12 @@ public class NoteDetailsActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {}
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {}
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
         });
 
         blueSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -681,10 +656,12 @@ public class NoteDetailsActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {}
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {}
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
         });
 
         builder.setView(view);
@@ -720,7 +697,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
         }
     }
 
-
     private void showDeleteConfirmationDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AlertDialogCustom);
         builder.setTitle("Удаление заметки");
@@ -731,7 +707,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
         messageTextView.setText("Вы действительно хотите удалить эту заметку?");
 
         builder.setView(view);
-        builder.setIcon(R.drawable.delete6);
+        builder.setIcon(R.drawable.trash_bin_minimalistic_svgrepo_com);
         builder.setNegativeButton("Нет", null);
         builder.setPositiveButton("Да", (dialog, whichButton) -> deleteNote());
 
@@ -824,5 +800,132 @@ public class NoteDetailsActivity extends AppCompatActivity {
 
         dialog.show();
     }
+
+    private void saveNoteAsPdf() {
+        // Проверка разрешений
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_EXTERNAL_STORAGE);
+            return;
+        }
+
+        // Создание документа PDF
+        PdfDocument pdfDocument = new PdfDocument();
+        PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(595, 842, 1).create(); // A4 size
+        PdfDocument.Page page = pdfDocument.startPage(pageInfo);
+
+        Canvas canvas = page.getCanvas();
+        Paint paint = new Paint();
+        paint.setColor(Color.BLACK);
+        paint.setTextSize(20);
+
+        // Добавление заголовка
+        String title = toolbarTitleEditText.getText().toString().trim();
+        canvas.drawText(title, 50, 50, paint);
+
+        // Добавление содержимого
+        String content = contentEditText.getText().toString().trim();
+        String[] lines = content.split("\n");
+        float y = 100;
+        for (String line : lines) {
+            canvas.drawText(line, 50, y, paint);
+            y += 30;
+        }
+
+        pdfDocument.finishPage(page);
+
+        // Сохранение документа в файл
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.MediaColumns.DISPLAY_NAME, "note.pdf");
+        values.put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf");
+        values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS);
+
+        ContentResolver resolver = getContentResolver();
+        Uri uri = resolver.insert(MediaStore.Files.getContentUri("external"), values);
+
+        try (OutputStream outputStream = resolver.openOutputStream(uri)) {
+            pdfDocument.writeTo(outputStream);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Ошибка при сохранении PDF", Toast.LENGTH_SHORT).show();
+        }
+
+        pdfDocument.close();
+        Toast.makeText(this, "Заметка сохранена в PDF", Toast.LENGTH_SHORT).show();
+    }
+
+
+    private void verifyStoragePermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // На Android 10 и выше не нужно запрашивать разрешения на чтение/запись
+            return;
+        }
+
+        int readPermission = ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+        int writePermission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (readPermission != PackageManager.PERMISSION_GRANTED || writePermission != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                    this,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == REQUEST_EXTERNAL_STORAGE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Разрешение предоставлено
+                saveNoteAsPdf(); // Вызов метода сохранения PDF после получения разрешения
+            } else {
+                Toast.makeText(this, "Разрешение на доступ к хранилищу не предоставлено", Toast.LENGTH_SHORT).show();
+                // Повторный запрос разрешений или уведомление пользователя
+                showPermissionDeniedDialog();
+            }
+        }
+        if (requestCode == REQUEST_RECORD_AUDIO_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (isRequestingPermission) {
+                    startRecording();
+                    isRequestingPermission = false;
+                }
+            } else {
+                Toast.makeText(this, "Разрешение на запись аудио не предоставлено", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        if (requestCode == REQUEST_CALENDAR_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Разрешение предоставлено
+            } else {
+                Toast.makeText(this, "Разрешение на доступ к календарю не предоставлено", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void showPermissionDeniedDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Разрешение на доступ к хранилищу");
+        builder.setMessage("Для сохранения заметок в PDF необходимо предоставить разрешение на доступ к хранилищу. Пожалуйста, предоставьте разрешение в настройках приложения.");
+        builder.setPositiveButton("Настройки", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                Uri uri = Uri.fromParts("package", getPackageName(), null);
+                intent.setData(uri);
+                startActivity(intent);
+            }
+        });
+        builder.setNegativeButton("Отмена", null);
+        builder.show();
+    }
+
+
+
 
 }

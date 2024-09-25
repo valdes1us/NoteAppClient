@@ -36,6 +36,8 @@ dependencies {
     implementation libs.recyclerview
     implementation 'androidx.work:work-runtime:2.7.1'
     implementation 'com.github.gcacace:signature-pad:1.3.0'
+        implementation 'androidx.cardview:cardview:1.0.0'
+
 
 
 
