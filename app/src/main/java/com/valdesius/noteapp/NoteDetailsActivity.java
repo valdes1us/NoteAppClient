@@ -23,6 +23,9 @@ import android.provider.CalendarContract;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.speech.RecognizerIntent;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,6 +33,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -67,7 +71,6 @@ import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
 
-
 public class NoteDetailsActivity extends AppCompatActivity {
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
@@ -91,6 +94,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
     private String currentFontColor;
     private float currentFontSize = 20;
     private String currentFontStyle = "мЗаметки"; // По умолчанию
+    private int currentListNumber = 1; // Переменная для хранения текущего номера элемента списка
 
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
     private static final int REQUEST_SPEECH_RECOGNIZER = 300;
@@ -106,9 +110,10 @@ public class NoteDetailsActivity extends AppCompatActivity {
     private ImageView calendarButton;
     private Calendar selectedDateTime;
 
-    private ImageView drawingButton;
-
     private static final int REQUEST_CALENDAR_PERMISSION = 100;
+
+    private boolean isListOrdered = true;
+    private boolean isListActive = false; // Переменная для отслеживания активного списка
 
     private void requestCalendarPermissions() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED ||
@@ -125,8 +130,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
         scaleAnimation = AnimationUtils.loadAnimation(this, R.anim.scale_animation);
         voiceRecordButton = findViewById(R.id.voice_record);
 
-
-
         noteDatabase = NoteDatabase.getDatabase(this);
         noteDao = noteDatabase.noteDao();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -134,7 +137,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark3));
         }
-verifyStoragePermissions();
+        verifyStoragePermissions();
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("");
@@ -146,9 +149,68 @@ verifyStoragePermissions();
         fontChange = findViewById(R.id.font_change);
         fontStyleChange = findViewById(R.id.font_style_change); // Инициализация кнопки для изменения стиля шрифта
         bgChange = findViewById(R.id.bg_change);
-        listCreate = findViewById(R.id.list_create); // Инициализация кнопки для создания маркерованного списка
+
         nestedScrollView = findViewById(R.id.nestedScrollView);
         back();
+        handleEnterKey();
+
+        listCreate = findViewById(R.id.list_create); // Инициализация кнопки для создания маркерованного списка
+        listCreate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                listCreate.startAnimation(scaleAnimation);
+                if (isListActive) {
+                    // Отключаем режим списка
+                    isListActive = false;
+                    isListOrdered = false;
+                    // Удаляем маркеры списка из текста с текущей позиции курсора и далее
+                    int cursorPosition = contentEditText.getSelectionStart();
+                    String currentText = contentEditText.getText().toString();
+                    String[] lines = currentText.split("\n");
+                    StringBuilder updatedText = new StringBuilder();
+                    int lineIndex = 0;
+                    int currentLineLength = 0;
+                    for (String line : lines) {
+                        currentLineLength += line.length() + 1; // +1 для учета символа новой строки
+                        if (currentLineLength >= cursorPosition) {
+                            break;
+                        }
+                        lineIndex++;
+                    }
+                    int newCursorPosition = cursorPosition;
+                    for (int i = 0; i < lines.length; i++) {
+                        if (i >= lineIndex) {
+                            if (lines[i].startsWith("• ") || lines[i].matches("\\d+\\. .*")) {
+                                if (lines[i].length() > 3) {
+                                    updatedText.append(lines[i].substring(3)).append("\n");
+                                    if (i == lineIndex) {
+                                        newCursorPosition -= 3; // Уменьшаем позицию курсора на длину маркера
+                                    }
+                                } else {
+                                    updatedText.append(lines[i]).append("\n");
+                                }
+                            } else {
+                                updatedText.append(lines[i]).append("\n");
+                            }
+                        } else {
+                            updatedText.append(lines[i]).append("\n");
+                        }
+                    }
+                    contentEditText.setText(updatedText.toString());
+                    contentEditText.setSelection(Math.max(0, newCursorPosition)); // Устанавливаем курсор в корректную позицию
+                } else {
+                    showListPicker();
+                    if (isListOrdered) {
+                        listCreate.setImageResource(R.drawable.list_ordered_svgrepo_com__1_);
+                    } else {
+                        listCreate.setImageResource(R.drawable.list_ordered_svgrepo_com2);
+                    }
+                    isListOrdered = !isListOrdered; // Переключение состояния
+                    currentListNumber = 1; // Сбрасываем счетчик номеров списка
+                }
+            }
+        });
+
 
 
 
@@ -168,7 +230,6 @@ verifyStoragePermissions();
                 }
             }
         });
-
 
         shareButton = findViewById(R.id.share_button);
         shareButton.setOnClickListener(new View.OnClickListener() {
@@ -209,14 +270,6 @@ verifyStoragePermissions();
             }
         });
 
-        listCreate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                listCreate.startAnimation(scaleAnimation);
-                showListPicker();
-            }
-        });
-
         calendarButton = findViewById(R.id.calendar_button);
         calendarButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -232,7 +285,6 @@ verifyStoragePermissions();
             loadNote();
         }
     }
-
 
     private static final int REQUEST_DRAWING = 400;
 
@@ -370,9 +422,7 @@ verifyStoragePermissions();
 
         }
 
-
     }
-
 
     private void stopRecording() {
         if (mediaRecorder != null) {
@@ -402,11 +452,6 @@ verifyStoragePermissions();
             Toast.makeText(this, "Ошибка распознавания речи", Toast.LENGTH_SHORT).show();
         }
     }
-
-
-
-
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -477,7 +522,6 @@ verifyStoragePermissions();
         contentEditText.setTypeface(typeface);
         toolbarTitleEditText.setTypeface(typeface);
     }
-
 
     private void showBackgroundColorPicker() {
         showColorPickerDialog(true);
@@ -743,35 +787,98 @@ verifyStoragePermissions();
 
     private void createBulletList() {
         String currentText = contentEditText.getText().toString();
-        String[] lines = currentText.split("\n");
-        StringBuilder bulletList = new StringBuilder();
+        if (currentText.isEmpty()) {
+            currentText = "• "; // Добавляем начальный элемент списка
+        } else {
+            String[] lines = currentText.split("\n");
+            StringBuilder bulletList = new StringBuilder();
 
-        for (String line : lines) {
-            if (!line.trim().isEmpty()) {
-                bulletList.append("• ").append(line).append("\n");
-            } else {
-                bulletList.append(line).append("\n");
+            for (String line : lines) {
+                if (!line.trim().isEmpty()) {
+                    bulletList.append("• ").append(line).append("\n");
+                } else {
+                    bulletList.append(line).append("\n");
+                }
             }
+
+            currentText = bulletList.toString();
         }
 
-        contentEditText.setText(bulletList.toString());
+        contentEditText.setText(currentText);
+        contentEditText.setSelection(currentText.length()); // Устанавливаем курсор в конец текста
     }
 
     private void createNumberedList() {
+        int cursorPosition = contentEditText.getSelectionStart();
         String currentText = contentEditText.getText().toString();
         String[] lines = currentText.split("\n");
         StringBuilder numberedList = new StringBuilder();
 
+        int lineIndex = 0;
+        int currentLineLength = 0;
+        for (String line : lines) {
+            currentLineLength += line.length() + 1; // +1 для учета символа новой строки
+            if (currentLineLength >= cursorPosition) {
+                break;
+            }
+            lineIndex++;
+        }
+
         for (int i = 0; i < lines.length; i++) {
-            if (!lines[i].trim().isEmpty()) {
-                numberedList.append(i + 1).append(". ").append(lines[i]).append("\n");
+            if (i >= lineIndex) {
+                if (!lines[i].trim().isEmpty()) {
+                    numberedList.append(i - lineIndex + "").append(". ").append(lines[i]).append("\n");
+                } else {
+                    numberedList.append(lines[i]).append("\n");
+                }
             } else {
                 numberedList.append(lines[i]).append("\n");
             }
         }
 
         contentEditText.setText(numberedList.toString());
+        int newCursorPosition = Math.min(numberedList.length(), cursorPosition + 3); // Устанавливаем курсор в корректную позицию
+        contentEditText.setSelection(newCursorPosition);
     }
+
+    private void handleEnterKey() {
+        contentEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Не используется
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Не используется
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (s.length() > 0 && s.charAt(s.length() - 1) == '\n') {
+                    String currentText = s.toString();
+                    String lastLine = currentText.substring(currentText.lastIndexOf("\n") + 1);
+
+                    if (isListActive) {
+                        if (isListOrdered) {
+                            if (lastLine.trim().isEmpty()) {
+                                s.append(currentListNumber + ". ");
+                                currentListNumber++;
+                            } else {
+                                s.append(currentListNumber + ". ");
+                                currentListNumber++;
+                            }
+                        } else {
+                            s.append("• ");
+                        }
+                    }
+
+                    contentEditText.setSelection(s.length()); // Устанавливаем курсор в конец текста
+                }
+            }
+        });
+    }
+
 
     private void showListPicker() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -791,9 +898,12 @@ verifyStoragePermissions();
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (position == 0) {
                     createBulletList();
+                    isListOrdered = false;
                 } else if (position == 1) {
                     createNumberedList();
+                    isListOrdered = true;
                 }
+                isListActive = true; // Устанавливаем флаг активного списка
                 dialog.dismiss();
             }
         });
@@ -854,7 +964,6 @@ verifyStoragePermissions();
         Toast.makeText(this, "Заметка сохранена в PDF", Toast.LENGTH_SHORT).show();
     }
 
-
     private void verifyStoragePermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             // На Android 10 и выше не нужно запрашивать разрешения на чтение/запись
@@ -872,7 +981,6 @@ verifyStoragePermissions();
             );
         }
     }
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -924,8 +1032,4 @@ verifyStoragePermissions();
         builder.setNegativeButton("Отмена", null);
         builder.show();
     }
-
-
-
-
 }

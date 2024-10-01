@@ -126,6 +126,7 @@
                     android:layout_height="wrap_content"
                     android:src="@drawable/list_ordered_svgrepo_com2"
                     android:contentDescription="Иконка 1"
+                    android:visibility="gone"
                     android:layout_marginEnd="16dp" />
 
                 <ImageView
