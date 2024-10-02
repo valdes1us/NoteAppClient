@@ -10,9 +10,9 @@
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
+
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#2e2e2e"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
         <LinearLayout
@@ -50,6 +50,7 @@
     <androidx.core.widget.NestedScrollView
         android:id="@+id/nestedScrollView"
         android:layout_width="match_parent"
+
         android:layout_height="wrap_content"
         android:layout_above="@id/toolbar_bottom"
         android:layout_below="@id/toolbar"

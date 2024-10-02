@@ -21,6 +21,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -34,6 +35,7 @@ public class SettingsFragment extends Fragment {
     private RelativeLayout homeBLayout;
     private FrameLayout fragmentContainer;
     private TextView emptyListText;
+    private NestedScrollView nestedScrollView;
 
     @SuppressLint("MissingInflatedId")
     @Nullable
@@ -70,6 +72,8 @@ public class SettingsFragment extends Fragment {
                 editor.apply();
                 updateBottomNavigationView();
                 updateFragmentContainerBackground();
+                updateToolbarColor();
+                updateNestedScrollViewColor();
                 getActivity().recreate();
             }
         });
@@ -78,7 +82,7 @@ public class SettingsFragment extends Fragment {
         searchView = getActivity().findViewById(R.id.search_view); // Initialize searchView here
         bottomNavigationView = getActivity().findViewById(R.id.bottom_navigation); // Initialize bottomNavigationView here
         fragmentContainer = getActivity().findViewById(R.id.fragment_container); // Initialize fragmentContainer here
-
+        nestedScrollView = getActivity().findViewById(R.id.nestedScrollView); // Initialize nestedScrollView here
 
         return view;
     }
@@ -90,6 +94,7 @@ public class SettingsFragment extends Fragment {
         updateSearchViewIcon();
         updateBottomNavigationView();
         updateFragmentContainerBackground();
+        updateNestedScrollViewColor();
     }
 
     private void updateToolbarColor() {
@@ -176,6 +181,19 @@ public class SettingsFragment extends Fragment {
                 if (emptyListText != null) {
                     emptyListText.setTextColor(getResources().getColor(R.color.black));
                 }
+            }
+        }
+    }
+
+    private void updateNestedScrollViewColor() {
+        if (nestedScrollView != null) {
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            boolean isNightMode = preferences.getBoolean("isNightMode", false);
+
+            if (isNightMode) {
+                nestedScrollView.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark3));
+            } else {
+                nestedScrollView.setBackgroundColor(getResources().getColor(android.R.color.white));
             }
         }
     }

@@ -7,6 +7,7 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -19,13 +20,13 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.provider.CalendarContract;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.speech.RecognizerIntent;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -33,12 +34,12 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -47,6 +48,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -127,6 +129,16 @@ public class NoteDetailsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note_details);
 
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        boolean isNightMode = preferences.getBoolean("isNightMode", false);
+
+        if (isNightMode) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        }
+
+        updateNestedScrollViewColor();
         scaleAnimation = AnimationUtils.loadAnimation(this, R.anim.scale_animation);
         voiceRecordButton = findViewById(R.id.voice_record);
 
@@ -210,8 +222,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
                 }
             }
         });
-
-
 
 
         voiceRecordButton.setOnClickListener(new View.OnClickListener() {
@@ -1032,4 +1042,64 @@ public class NoteDetailsActivity extends AppCompatActivity {
         builder.setNegativeButton("Отмена", null);
         builder.show();
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateNestedScrollViewColor();
+    }
+
+    private void updateNestedScrollViewColor() {
+        if (nestedScrollView != null) {
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            boolean isNightMode = preferences.getBoolean("isNightMode", false);
+
+            if (isNightMode) {
+                nestedScrollView.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark3));
+            } else {
+                nestedScrollView.setBackgroundColor(getResources().getColor(R.color.grey2));
+            }
+        }
+        updateToolbarColor();
+        updateToolbarBottomColor();
+    }
+
+    private void updateToolbarColor() {
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        if (toolbar != null) {
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            boolean isNightMode = preferences.getBoolean("isNightMode", false);
+
+            if (isNightMode) {
+                toolbar.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
+            } else {
+                toolbar.setBackgroundColor(getResources().getColor(android.R.color.white));
+            }
+        }
+    }
+
+    private void updateToolbarBottomColor() {
+        RelativeLayout toolbarBottom = findViewById(R.id.toolbar_bottom);
+        if (toolbarBottom != null) {
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            boolean isNightMode = preferences.getBoolean("isNightMode", false);
+
+            if (isNightMode) {
+                toolbarBottom.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    Window window = getWindow();
+                    window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                    window.setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
+                }
+            } else {
+                toolbarBottom.setBackgroundColor(getResources().getColor(android.R.color.white));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    Window window = getWindow();
+                    window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                    window.setStatusBarColor(getResources().getColor(R.color.greyy));
+                }
+            }
+        }
+    }
+
 }
