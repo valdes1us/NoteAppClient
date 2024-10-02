@@ -1,3 +1,5 @@
+
+
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -46,7 +48,7 @@
             android:layout_gravity="end"
             android:queryHint="Поиск заметок"
             android:iconifiedByDefault="false"
-            app:searchIcon="@drawable/search_find_magnifier_zoom_view_svgrepo_com2"
+            app:searchIcon="@drawable/search_svgrepo_com__1_"
             android:layout_marginEnd="16dp"
             android:background="@android:color/transparent"
             app:queryBackground="@android:color/transparent"
@@ -55,9 +57,9 @@
     </androidx.appcompat.widget.Toolbar>
 
     <RelativeLayout
+        android:id="@+id/homeBg"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#1f1f1f"
         android:layout_above="@id/bottom_navigation"
         tools:context=".NoteDetailsActivity">
 

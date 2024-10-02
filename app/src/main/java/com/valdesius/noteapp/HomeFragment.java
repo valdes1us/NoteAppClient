@@ -3,6 +3,7 @@ package com.valdesius.noteapp;
 import static android.app.Activity.RESULT_OK;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -10,25 +11,34 @@ import android.graphics.Path;
 import android.graphics.RectF;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.valdesius.noteapp.helpers.NoteListRecyclerViewHelper;
@@ -36,10 +46,11 @@ import com.valdesius.noteapp.models.Note;
 import com.valdesius.noteapp.models.NoteDao;
 import com.valdesius.noteapp.models.NoteDatabase;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements OnThemeChangeListener{
 
     private static final int CREATE_NOTE_REQUEST = 1; // Код запроса для создания заметки
     public static final int EDIT_NOTE_REQUEST = 2;
@@ -52,43 +63,76 @@ public class HomeFragment extends Fragment {
     private FloatingActionButton createNoteButton;
     private TextView emptyListText;
     private ImageView noteImage;
+    private SearchView searchView; // Добавьте SearchView
 
     private NoteDatabase noteDatabase;
     private NoteDao noteDao;
+    private NoteViewModel noteViewModel;
+
+    private RelativeLayout homeBLayout;
+
+    private TextView textToolbar;
+
+    private BottomNavigationView bottomNavigationView;
+    private FrameLayout fragmentContainer;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Window window = getActivity().getWindow();
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark3));
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        boolean isNightMode = preferences.getBoolean("isNightMode", false);
+
+        if (isNightMode) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         }
         // Инициализация базы данных
         noteDatabase = NoteDatabase.getDatabase(requireContext());
         noteDao = noteDatabase.noteDao();
 
-        // Загрузка заметок из базы данных
-        loadNotesFromDatabase();
+        // Инициализация RecyclerView и списка заметок
+        noteRecyclerView = view.findViewById(R.id.note_list_recycler_view);
+        noteRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+
+        noteListAdapter = new NoteListRecyclerViewHelper(new ArrayList<>(), requireContext());
+        noteRecyclerView.setAdapter(noteListAdapter);
+
+        // Инициализация ViewModel и наблюдение за изменениями данных
+        noteViewModel = new ViewModelProvider(this).get(NoteViewModel.class);
+        noteViewModel.getAllNotes().observe(getViewLifecycleOwner(), new Observer<List<Note>>() {
+            @Override
+            public void onChanged(List<Note> notes) {
+                noteList = notes;
+                noteListAdapter.updateNoteList(noteList);
+                updateEmptyListVisibility();
+            }
+        });
 
         // Обработка системных отступов
-        ViewCompat.setOnApplyWindowInsetsListener(view.findViewById(R.id.main), (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(view.findViewById(R.id.main2), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        // Инициализация RecyclerView и списка заметок
-        noteRecyclerView = view.findViewById(R.id.note_list_recycler_view);
-        noteRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-
-        // Загрузка заметок с сервера
-        loadNotesFromDatabase();
         createNoteButton = view.findViewById(R.id.create_note_btn);
         createNote();
 
         emptyListText = view.findViewById(R.id.empty_list_text);
         noteImage = view.findViewById(R.id.note_image);
+
+        textToolbar = getActivity().findViewById(R.id.toolbar_title); // Initialize textToolbar here
+        searchView = getActivity().findViewById(R.id.search_view); // Initialize searchView here
+        bottomNavigationView = getActivity().findViewById(R.id.bottom_navigation); // Initialize bottomNavigationView here
+        fragmentContainer = getActivity().findViewById(R.id.fragment_container); // Initialize fragmentContainer here
+
+        // Инициализация homeBLayout
+        homeBLayout = view.findViewById(R.id.homeB);
+        if (homeBLayout == null) {
+            Log.e("HomeFragment", "homeBLayout is null after initialization");
+        }
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
             @Override
@@ -141,36 +185,6 @@ public class HomeFragment extends Fragment {
         return view;
     }
 
-    private void loadNotesFromDatabase() {
-        new Thread(() -> {
-            noteList = noteDao.getAllNotes();
-            requireActivity().runOnUiThread(() -> {
-                noteListAdapter = new NoteListRecyclerViewHelper(noteList, requireContext());
-                noteRecyclerView.setAdapter(noteListAdapter);
-                updateEmptyListVisibility();
-            });
-        }).start();
-    }
-
-    private void filterNotes(String query) {
-        if (noteListAdapter == null) {
-            return; // Если адаптер не инициализирован, выходим из метода
-        }
-
-        if (query.isEmpty()) {
-            filteredNoteList = noteList; // Если строка поиска пуста, показываем все заметки
-        } else {
-            filteredNoteList = new ArrayList<>();
-            for (Note note : noteList) {
-                if (note.getTitle().toLowerCase().contains(query.toLowerCase()) ||
-                        note.getContent().toLowerCase().contains(query.toLowerCase())) {
-                    filteredNoteList.add(note);
-                }
-            }
-        }
-        noteListAdapter.updateNoteList(filteredNoteList);
-        updateEmptyListVisibility();
-    }
 
     private void createNote() {
         createNoteButton.setOnClickListener(new View.OnClickListener() {
@@ -187,11 +201,26 @@ public class HomeFragment extends Fragment {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == CREATE_NOTE_REQUEST && resultCode == RESULT_OK) {
-            loadNotesFromDatabase(); // Перезагружаем список заметок после создания новой заметки
+            // Перезагружаем список заметок после создания новой заметки
         } else if (requestCode == EDIT_NOTE_REQUEST && resultCode == RESULT_OK) {
-            loadNotesFromDatabase(); // Перезагружаем список заметок после редактирования
+            // Перезагружаем список заметок после редактирования
         }
     }
+
+    @Override
+    public void onThemeChanged(int nightMode) {
+        if (emptyListText != null) {
+            if (nightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES) {
+                emptyListText.setTextColor(getResources().getColor(R.color.white));
+            } else {
+                emptyListText.setTextColor(getResources().getColor(R.color.black));
+            }
+        }
+    }
+
+
+
+
 
     public void deleteNoteWithUndo(Note note, int position) {
         // Удаляем заметку из списка и обновляем адаптер
@@ -231,7 +260,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void updateEmptyListVisibility() {
-        if (noteList.isEmpty()) {
+        if (noteList == null || noteList.isEmpty()) {
             emptyListText.setVisibility(View.VISIBLE);
             noteImage.setVisibility(View.VISIBLE);
         } else {
@@ -239,4 +268,104 @@ public class HomeFragment extends Fragment {
             noteImage.setVisibility(View.GONE);
         }
     }
+
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateToolbarColor();
+        updateSearchViewIcon();
+        updateBottomNavigationView();
+        updateFragmentContainerBackground();
+    }
+
+    private void updateToolbarColor() {
+        Toolbar toolbar = getActivity().findViewById(R.id.toolbar);
+        if (toolbar != null) {
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            boolean isNightMode = preferences.getBoolean("isNightMode", false);
+
+            if (isNightMode) {
+                toolbar.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
+                if (textToolbar != null) {
+                    textToolbar.setTextColor(getResources().getColor(R.color.white)); // Set text color to white in night mode
+                }
+            } else {
+                toolbar.setBackgroundColor(getResources().getColor(android.R.color.white));
+                if (textToolbar != null) {
+                    textToolbar.setTextColor(getResources().getColor(R.color.black)); // Set text color to black in day mode
+                }
+            }
+        }
+    }
+
+    private void updateSearchViewIcon() {
+        if (searchView != null) {
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            boolean isNightMode = preferences.getBoolean("isNightMode", false);
+
+            int searchIconResId = isNightMode
+                    ? R.drawable.search_svgrepo_com__1_
+                    : R.drawable.search_svgrepo_com;
+
+            try {
+                Field searchField = SearchView.class.getDeclaredField("mSearchButton");
+                searchField.setAccessible(true);
+                Object searchButton = searchField.get(searchView);
+                if (searchButton != null && searchButton instanceof ImageView) {
+                    ((ImageView) searchButton).setImageDrawable(getResources().getDrawable(searchIconResId));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void updateBottomNavigationView() {
+        if (bottomNavigationView != null) {
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            boolean isNightMode = preferences.getBoolean("isNightMode", false);
+
+            if (isNightMode) {
+                bottomNavigationView.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
+                bottomNavigationView.setItemIconTintList(getResources().getColorStateList(R.color.white));
+                bottomNavigationView.setItemTextColor(getResources().getColorStateList(R.color.white));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    Window window = getActivity().getWindow();
+                    window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                    window.setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
+                }
+            } else {
+                bottomNavigationView.setBackgroundColor(getResources().getColor(android.R.color.white));
+                bottomNavigationView.setItemIconTintList(getResources().getColorStateList(R.color.black));
+                bottomNavigationView.setItemTextColor(getResources().getColorStateList(R.color.black));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    Window window = getActivity().getWindow();
+                    window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                    window.setStatusBarColor(getResources().getColor(R.color.greyy));
+                }
+            }
+        }
+    }
+
+    private void updateFragmentContainerBackground() {
+        if (fragmentContainer != null) {
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            boolean isNightMode = preferences.getBoolean("isNightMode", false);
+
+            if (isNightMode) {
+                fragmentContainer.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark3));
+                if (emptyListText != null) {
+                    emptyListText.setTextColor(getResources().getColor(R.color.white));
+                }
+            } else {
+                fragmentContainer.setBackgroundColor(getResources().getColor(R.color.grey2));
+                if (emptyListText != null) {
+                    emptyListText.setTextColor(getResources().getColor(R.color.black));
+                }
+            }
+        }
+    }
+
 }

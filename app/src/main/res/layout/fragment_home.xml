@@ -5,13 +5,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#161616"
-    android:id="@+id/main">
+
+    android:id="@+id/main2">
 
     <RelativeLayout
+        android:id="@+id/homeB"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#1f1f1f"
         android:layout_below="@id/toolbar">
 
         <androidx.recyclerview.widget.RecyclerView
@@ -29,6 +29,8 @@
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
+
+            android:visibility="gone"
             android:src="@drawable/note_text_plus_svgrepo_com2"
             tools:ignore="NotSibling" />
 
@@ -38,10 +40,12 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/note_image"
             android:layout_centerHorizontal="true"
+            android:textColor="#249BFF"
             android:layout_marginTop="16dp"
             android:fontFamily="@font/montserratalternatesregular"
             android:text="Список заметок пуст"
-            android:textColor="@color/white"
+
+            android:visibility="gone"
             android:textSize="25dp" />
 
     </RelativeLayout>
@@ -54,6 +58,7 @@
         android:layout_alignParentBottom="true"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="15dp"
+
         app:backgroundTint="@color/blue"
         app:srcCompat="@drawable/baseline_add_24" />
 </RelativeLayout>

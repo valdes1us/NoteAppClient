@@ -1,5 +1,6 @@
 package com.valdesius.noteapp.models;
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -20,7 +21,7 @@ public interface NoteDao {
     void delete(Note note);
 
     @Query("SELECT * FROM notes")
-    List<Note> getAllNotes();
+    LiveData<List<Note>> getAllNotes();
 
     @Query("SELECT * FROM notes WHERE note_id = :noteId")
     Note getNoteById(int noteId);
