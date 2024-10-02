@@ -2,7 +2,9 @@ package com.valdesius.noteapp.helpers;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,11 +48,18 @@ public class NoteListRecyclerViewHelper extends RecyclerView.Adapter<NoteListRec
         holder.titleTextView.setText(note.getTitle());
         holder.contentTextView.setText(note.getContent());
 
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean isNightMode = preferences.getBoolean("isNightMode", false);
+
         // Устанавливаем фон для CardView
         if (note.getBackgroundColor() != null) {
             holder.cardView.setCardBackgroundColor(Color.parseColor(note.getBackgroundColor()));
         } else {
-            holder.cardView.setCardBackgroundColor(Color.parseColor("#333333")); // По умолчанию
+            if (isNightMode) {
+                holder.cardView.setCardBackgroundColor(Color.parseColor("#333333")); // По умолчанию для темной темы
+            } else {
+                holder.cardView.setCardBackgroundColor(Color.parseColor("#E1B1B1B1")); // По умолчанию для светлой темы
+            }
         }
 
         // Устанавливаем цвет шрифта
@@ -58,8 +67,13 @@ public class NoteListRecyclerViewHelper extends RecyclerView.Adapter<NoteListRec
             holder.titleTextView.setTextColor(Color.parseColor(note.getFontColor()));
             holder.contentTextView.setTextColor(Color.parseColor(note.getFontColor()));
         } else {
-            holder.titleTextView.setTextColor(Color.parseColor("#FFFFFF")); // По умолчанию
-            holder.contentTextView.setTextColor(Color.parseColor("#FFFFFF")); // По умолчанию
+            if (isNightMode) {
+                holder.titleTextView.setTextColor(Color.parseColor("#FFFFFF")); // По умолчанию для темной темы
+                holder.contentTextView.setTextColor(Color.parseColor("#FFFFFF")); // По умолчанию для темной темы
+            } else {
+                holder.titleTextView.setTextColor(Color.parseColor("#000000")); // По умолчанию для светлой темы
+                holder.contentTextView.setTextColor(Color.parseColor("#000000")); // По умолчанию для светлой темы
+            }
         }
 
         // Обработка клика на элементе списка

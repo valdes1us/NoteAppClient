@@ -1,5 +1,6 @@
 package com.valdesius.noteapp;
 
+import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -10,10 +11,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Button;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -23,59 +25,87 @@ import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.valdesius.noteapp.models.Note;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
 public class SettingsFragment extends Fragment {
     private TextView textToolbar;
     private SearchView searchView;
     private BottomNavigationView bottomNavigationView;
-    private RelativeLayout homeBLayout;
     private FrameLayout fragmentContainer;
     private TextView emptyListText;
     private NestedScrollView nestedScrollView;
+    private Switch toggleThemeSwitch;
+    private TextView toggleThemeText;
 
+    private TextView firstLaunchDateTextView;
+    private TextView notesCountTextView;
     @SuppressLint("MissingInflatedId")
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean isNightMode = preferences.getBoolean("isNightMode", false);
-
-        if (isNightMode) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        if (!preferences.contains("isNightMode")) {
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putBoolean("isNightMode", true);
+            editor.apply();
         }
-        emptyListText = getActivity().findViewById(R.id.empty_list_text);
-        Button toggleThemeButton = view.findViewById(R.id.toggleThemeButton);
-        toggleThemeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int currentNightMode = getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
-                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-                SharedPreferences.Editor editor = preferences.edit();
 
-                switch (currentNightMode) {
-                    case android.content.res.Configuration.UI_MODE_NIGHT_NO:
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-                        editor.putBoolean("isNightMode", true);
-                        break;
-                    case android.content.res.Configuration.UI_MODE_NIGHT_YES:
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-                        editor.putBoolean("isNightMode", false);
-                        break;
-                }
-                editor.apply();
-                updateBottomNavigationView();
-                updateFragmentContainerBackground();
-                updateToolbarColor();
-                updateNestedScrollViewColor();
-                getActivity().recreate();
+        firstLaunchDateTextView = view.findViewById(R.id.firstLaunchDateTextView);
+        notesCountTextView = view.findViewById(R.id.notesCountTextView);
+        String firstLaunchDate = preferences.getString("firstLaunchDate", "Неизвестно");
+        firstLaunchDateTextView.setText("Вы начали использовать мЗаметки: " + firstLaunchDate);
+
+        NoteViewModel noteViewModel = new ViewModelProvider(this).get(NoteViewModel.class);
+        noteViewModel.getAllNotes().observe(getViewLifecycleOwner(), new Observer<List<Note>>() {
+            @Override
+            public void onChanged(List<Note> notes) {
+                notesCountTextView.setText("Количество заметок: " + notes.size());
             }
+        });
+
+
+        boolean isNightMode = preferences.getBoolean("isNightMode", true);
+        emptyListText = getActivity().findViewById(R.id.empty_list_text);
+        toggleThemeSwitch = view.findViewById(R.id.toggleThemeSwitch);
+        toggleThemeText = view.findViewById(R.id.toggleThemeText);
+        toggleThemeSwitch.setChecked(isNightMode);
+        toggleThemeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            SharedPreferences.Editor editor = preferences.edit();
+            if (isChecked) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                editor.putBoolean("isNightMode", true);
+                toggleThemeSwitch.setTextColor(getResources().getColor(R.color.white));
+                firstLaunchDateTextView.setTextColor(getResources().getColor(R.color.white));
+                notesCountTextView.setTextColor(getResources().getColor(R.color.white));
+                toggleThemeText.setTextColor(getResources().getColor(R.color.white));
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                editor.putBoolean("isNightMode", false);
+                toggleThemeSwitch.setTextColor(getResources().getColor(R.color.black));
+                firstLaunchDateTextView.setTextColor(getResources().getColor(R.color.black));
+                notesCountTextView.setTextColor(getResources().getColor(R.color.black));
+                toggleThemeText.setTextColor(getResources().getColor(R.color.black));
+            }
+
+
+            ObjectAnimator animator = ObjectAnimator.ofFloat(toggleThemeSwitch, "rotationX", 0f, 360f);
+            animator.setDuration(500);
+            animator.setInterpolator(new AccelerateDecelerateInterpolator());
+            animator.start();
+            editor.apply();
+            updateBottomNavigationView();
+            updateFragmentContainerBackground();
+            updateToolbarColor();
+            updateNestedScrollViewColor();
+            getActivity().recreate();
         });
 
         textToolbar = getActivity().findViewById(R.id.toolbar_title); // Initialize textToolbar here
@@ -98,6 +128,7 @@ public class SettingsFragment extends Fragment {
     }
 
     private void updateToolbarColor() {
+
         Toolbar toolbar = getActivity().findViewById(R.id.toolbar);
         if (toolbar != null) {
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -107,9 +138,16 @@ public class SettingsFragment extends Fragment {
                 toolbar.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
                 if (textToolbar != null) {
                     textToolbar.setTextColor(getResources().getColor(R.color.white)); // Set text color to white in night mode
+                    toggleThemeSwitch.setTextColor(getResources().getColor(android.R.color.white));
+                    firstLaunchDateTextView.setTextColor(getResources().getColor(R.color.white));
+                    notesCountTextView.setTextColor(getResources().getColor(R.color.white));
+                    toggleThemeText.setTextColor(getResources().getColor(R.color.white));
                 }
             } else {
                 toolbar.setBackgroundColor(getResources().getColor(android.R.color.white));
+                firstLaunchDateTextView.setTextColor(getResources().getColor(R.color.black));
+                notesCountTextView.setTextColor(getResources().getColor(R.color.black));
+                toggleThemeText.setTextColor(getResources().getColor(R.color.black));
                 if (textToolbar != null) {
                     textToolbar.setTextColor(getResources().getColor(R.color.black)); // Set text color to black in day mode
                 }

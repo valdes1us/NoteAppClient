@@ -25,7 +25,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_gravity="start"
-            app:srcCompat="@drawable/write_svgrepo_com__1_"
+            app:srcCompat="@drawable/edit__5___2_"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true" />
 

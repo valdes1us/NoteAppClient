@@ -81,13 +81,13 @@ public class HomeFragment extends Fragment implements OnThemeChangeListener{
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean isNightMode = preferences.getBoolean("isNightMode", false);
-
-        if (isNightMode) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        if (!preferences.contains("isNightMode")) {
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putBoolean("isNightMode", true);
+            editor.apply();
         }
+
+        boolean isNightMode = preferences.getBoolean("isNightMode", true);
         // Инициализация базы данных
         noteDatabase = NoteDatabase.getDatabase(requireContext());
         noteDao = noteDatabase.noteDao();

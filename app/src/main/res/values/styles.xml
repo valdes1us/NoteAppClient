@@ -83,5 +83,14 @@
         <item name="android:textColorSecondary">@color/black</item>
         <item name="android:windowBackground">@color/grey</item>
     </style>
+    <style name="CustomSwitch" parent="Widget.AppCompat.CompoundButton.Switch">
+        <item name="android:textSize">20sp</item>
+        <item name="android:paddingStart">1dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:thumb">@drawable/custom_switch_thumb</item>
+        <item name="android:track">@drawable/custom_switch_track</item>
+        <item name="android:switchMinWidth">48dp</item>
 
+        <item name="android:switchPadding">50dp</item>
+    </style>
 </resources>
