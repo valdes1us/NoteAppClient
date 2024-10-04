@@ -12,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
@@ -21,7 +22,14 @@ import android.provider.CalendarContract;
 import android.provider.Settings;
 import android.speech.RecognizerIntent;
 import android.text.Editable;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.TextPaint;
 import android.text.TextWatcher;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
+import android.text.style.ImageSpan;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -53,6 +61,7 @@ import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.widget.NestedScrollView;
 
+import com.valdesius.noteapp.helpers.ClickableImageSpan;
 import com.valdesius.noteapp.helpers.FontSizeAdapter;
 import com.valdesius.noteapp.helpers.FontStyleAdapter;
 import com.valdesius.noteapp.models.Note;
@@ -111,6 +120,8 @@ public class NoteDetailsActivity extends AppCompatActivity {
 
     private static final int REQUEST_CALENDAR_PERMISSION = 100;
 
+    private ImageView spisokButton;
+
 
     private void resetListCounterIfNeeded() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -125,6 +136,13 @@ public class NoteDetailsActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR}, REQUEST_CALENDAR_PERMISSION);
         }
     }
+
+
+
+
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -161,6 +179,18 @@ public class NoteDetailsActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("");
 
+        spisokButton = findViewById(R.id.spisok);
+        spisokButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                int start = contentEditText.getSelectionStart();
+                int end = contentEditText.getSelectionEnd();
+                if (start != end) {
+                    String selectedText = contentEditText.getText().toString().substring(start, end);
+
+                }
+            }
+        });
 
         listCreate = findViewById(R.id.list_create);
         contentEditText = findViewById(R.id.contentEditText);
@@ -207,7 +237,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
             }
         });
 
-
         if (isNightMode) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -230,8 +259,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
                     );
                 }
 
-
-
             }
         } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
@@ -250,7 +277,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
 
         nestedScrollView = findViewById(R.id.nestedScrollView);
         back();
-
         setDefaultFontSizeAndStyle();
 
         voiceRecordButton.setOnClickListener(new View.OnClickListener() {
@@ -327,6 +353,20 @@ public class NoteDetailsActivity extends AppCompatActivity {
         // Установка цвета шрифта в зависимости от темы
         setFontColorBasedOnTheme();
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     private static final int REQUEST_DRAWING = 400;
 
@@ -989,4 +1029,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
             toolbarTitleEditText.setTextColor(Color.BLACK);
         }
     }
+
+
 }

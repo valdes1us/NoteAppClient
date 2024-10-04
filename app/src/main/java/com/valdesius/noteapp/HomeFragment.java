@@ -379,7 +379,7 @@ public class HomeFragment extends Fragment implements OnThemeChangeListener{
                     emptyListText.setTextColor(getResources().getColor(R.color.white));
                 }
             } else {
-                fragmentContainer.setBackgroundColor(getResources().getColor(R.color.grey2));
+                fragmentContainer.setBackgroundColor(getResources().getColor(R.color.grey22));
                 if (emptyListText != null) {
                     emptyListText.setTextColor(getResources().getColor(R.color.black));
                 }

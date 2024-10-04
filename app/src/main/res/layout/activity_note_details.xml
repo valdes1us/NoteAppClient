@@ -71,7 +71,12 @@
                 android:hint="Введите текст"
                 android:padding="16dp"
                 android:textColor="#FFFFFF"
+                android:autoLink="none"
+                android:linksClickable="true"
+                android:textIsSelectable="true"
                 android:textColorHint="#CCCCCC" />
+
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
@@ -99,6 +104,15 @@
                 <!-- Первая иконка -->
                 <ImageView
                     android:id="@+id/font_change"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/text_size_svgrepo_com__3_"
+                    android:contentDescription="Иконка 1"
+                    android:paddingStart="10dp"
+                    android:layout_marginEnd="16dp" />
+                <ImageView
+                    android:id="@+id/spisok"
+                    android:visibility="gone"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:src="@drawable/text_size_svgrepo_com__3_"
