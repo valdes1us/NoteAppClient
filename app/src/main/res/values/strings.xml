@@ -9,6 +9,7 @@
         <item>Желтый</item>
     </string-array>
     <string-array name="font_sizes">
+        <item>20</item>
         <item>14</item>
         <item>16</item>
         <item>18</item>
@@ -21,12 +22,12 @@
     </string-array>
 
     <string-array name="font_styles">
+        <item>мЗаметки</item>
         <item>Arial</item>
         <item>Times New Roman</item>
         <item>Courier</item>
         <item>Verdana</item>
         <item>Comic Sans</item>
-        <item>мЗаметки</item>
         <item>Cataneo</item>
         <item>Futuris</item>
         <item>Helvetika</item>

@@ -17,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -335,6 +336,14 @@ public class HomeFragment extends Fragment implements OnThemeChangeListener{
                     Window window = getActivity().getWindow();
                     window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
                     window.setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
+
+                    // Устанавливаем цвет текста на статус-баре в темном режиме (по умолчанию белый)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        window.getDecorView().getWindowInsetsController().setSystemBarsAppearance(
+                                0,
+                                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                        );
+                    }
                 }
             } else {
                 bottomNavigationView.setBackgroundColor(getResources().getColor(android.R.color.white));
@@ -343,11 +352,21 @@ public class HomeFragment extends Fragment implements OnThemeChangeListener{
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     Window window = getActivity().getWindow();
                     window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-                    window.setStatusBarColor(getResources().getColor(R.color.greyy));
+                    window.setStatusBarColor(getResources().getColor(android.R.color.white));
+
+                    // Устанавливаем цвет текста на статус-баре в светлом режиме
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        window.getDecorView().getWindowInsetsController().setSystemBarsAppearance(
+                                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                        );
+                    }
                 }
             }
         }
     }
+
+
 
     private void updateFragmentContainerBackground() {
         if (fragmentContainer != null) {

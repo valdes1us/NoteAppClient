@@ -10,19 +10,14 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.Typeface;
-import android.graphics.pdf.PdfDocument;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.CalendarContract;
-import android.provider.MediaStore;
 import android.provider.Settings;
 import android.speech.RecognizerIntent;
 import android.text.Editable;
@@ -41,6 +36,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
@@ -58,7 +54,6 @@ import androidx.core.widget.NestedScrollView;
 
 import com.valdesius.noteapp.helpers.FontSizeAdapter;
 import com.valdesius.noteapp.helpers.FontStyleAdapter;
-import com.valdesius.noteapp.helpers.ListAdapter;
 import com.valdesius.noteapp.models.Note;
 import com.valdesius.noteapp.models.NoteDao;
 import com.valdesius.noteapp.models.NoteDatabase;
@@ -66,7 +61,6 @@ import com.valdesius.noteapp.models.NoteDatabase;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -79,7 +73,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
-    private ImageView saveAsPdfButton;
     private int noteId = -1;
     private EditText toolbarTitleEditText;
     private EditText contentEditText;
@@ -88,15 +81,18 @@ public class NoteDetailsActivity extends AppCompatActivity {
     private NoteDao noteDao;
     private ImageView colorChange;
     private ImageView fontChange;
-    private ImageView fontStyleChange; // Новое поле для изменения стиля шрифта
+    private ImageView fontStyleChange;
     private ImageView bgChange;
-    private ImageView listCreate; // Новое поле для создания маркерованного списка
+    private ImageView listCreate;
     private NestedScrollView nestedScrollView;
     private String currentBackgroundColor;
     private String currentFontColor;
     private float currentFontSize = 22;
-    private String currentFontStyle = "мЗаметки"; // По умолчанию
-    private int currentListNumber = 1; // Переменная для хранения текущего номера элемента списка
+    private String currentFontStyle = "мЗаметки";
+
+    private boolean isListMode = false;
+    private int listCounter = 1;
+
 
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
     private static final int REQUEST_SPEECH_RECOGNIZER = 300;
@@ -114,9 +110,13 @@ public class NoteDetailsActivity extends AppCompatActivity {
 
     private static final int REQUEST_CALENDAR_PERMISSION = 100;
 
-    private boolean isListOrdered = true;
-    private boolean isListActive = false; // Переменная для отслеживания активного списка
-
+    private void resetListCounterIfNeeded() {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean resetList = preferences.getBoolean("resetList", false);
+        if (resetList) {
+            listCounter = 1;
+        }
+    }
     private void requestCalendarPermissions() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED ||
                 ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
@@ -159,6 +159,52 @@ public class NoteDetailsActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("");
 
+
+        listCreate = findViewById(R.id.list_create);
+        contentEditText = findViewById(R.id.contentEditText);
+        if (contentEditText == null) {
+            throw new IllegalStateException("contentEditText is not initialized. Check your layout file.");
+        }
+        listCreate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (isListMode) {
+                    isListMode = false;
+                    listCreate.setImageResource(R.drawable.list_ordered_svgrepo_com2); // Иконка для выключенного режима списка
+                } else {
+                    isListMode = true;
+                    if(!isNightMode) {
+                        listCreate.setImageResource(R.drawable.list_ordered_svgrepo_com__2_);
+                    }
+                    else {
+                        listCreate.setImageResource(R.drawable.list_ordered_svgrepo_com__1_);
+                    }
+                    // Иконка для включенного режима списка
+                    resetListCounterIfNeeded();
+                    contentEditText.append(listCounter + ". ");
+
+                }
+            }
+        });
+
+        contentEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (isListMode && s.toString().endsWith("\n")) {
+                    listCounter++;
+                    contentEditText.append(listCounter + ". ");
+                }
+            }
+        });
+
         backButton = findViewById(R.id.back_button);
         toolbarTitleEditText = findViewById(R.id.toolbarTitleEditText);
         contentEditText = findViewById(R.id.contentEditText);
@@ -169,9 +215,8 @@ public class NoteDetailsActivity extends AppCompatActivity {
 
         nestedScrollView = findViewById(R.id.nestedScrollView);
         back();
-        handleEnterKey();
 
-        listCreate = findViewById(R.id.list_create); // Инициализация кнопки для создания маркерованного списка
+        setDefaultFontSizeAndStyle();
 
         voiceRecordButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -257,6 +302,18 @@ public class NoteDetailsActivity extends AppCompatActivity {
         }
     }
 
+
+    private void setDefaultFontSizeAndStyle() {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String defaultFontSize = preferences.getString("defaultFontSize", "22");
+        String defaultFontStyle = preferences.getString("defaultFontStyle", "мЗаметки");
+
+        currentFontSize = Float.parseFloat(defaultFontSize);
+        currentFontStyle = defaultFontStyle;
+
+        applyFontSize(currentFontSize);
+        applyFontStyle(currentFontStyle);
+    }
     private void addEventToCalendar(Calendar calendar) {
         ContentResolver cr = getContentResolver();
         ContentValues values = new ContentValues();
@@ -749,43 +806,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
 
 
 
-    private void handleEnterKey() {
-        contentEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                // Не используется
-            }
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // Не используется
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (s.length() > 0 && s.charAt(s.length() - 1) == '\n') {
-                    String currentText = s.toString();
-                    String lastLine = currentText.substring(currentText.lastIndexOf("\n") + 1);
-
-                    if (isListActive) {
-                        if (isListOrdered) {
-                            if (lastLine.trim().isEmpty()) {
-                                s.append(currentListNumber + ". ");
-                                currentListNumber++;
-                            } else {
-                                s.append(currentListNumber + ". ");
-                                currentListNumber++;
-                            }
-                        } else {
-                            s.append("• ");
-                        }
-                    }
-
-                    contentEditText.setSelection(s.length()); // Устанавливаем курсор в конец текста
-                }
-            }
-        });
-    }
 
 
 

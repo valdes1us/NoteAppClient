@@ -25,6 +25,7 @@
         android:layout_marginBottom="8dp" />
 
     <RelativeLayout
+        android:paddingTop="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -48,6 +49,102 @@
 
     </RelativeLayout>
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:paddingTop="10dp"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/resetListText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="20sp"
+                android:text="Сбрасывать нумерацию при создании нового списка"
+                android:paddingBottom="10dp" />
+
+            <Switch
+                android:id="@+id/resetListSwitch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
+                style="@style/CustomSwitch" />
+
+        </LinearLayout>
+
+    </RelativeLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#CCCCCC"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="8dp" />
+    <TextView
+        android:id="@+id/fontSizeText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:text="Размер шрифта"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true" />
+
+    <Spinner
+        android:id="@+id/fontSizeSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+       />
+
+    <TextView
+        android:id="@+id/fontStyleText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:text="Стиль шрифта"
+        android:layout_marginTop="10dp"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true" />
+
+    <Spinner
+        android:id="@+id/fontStyleSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        android:layout_marginTop="10dp" />
     <!-- Добавьте другие элементы настроек здесь -->
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+
+        android:layout_height="match_parent">
+        <TextView
+            android:id="@+id/veer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerInParent="true"
+
+            android:text="Версия 6.0"
+            />
+<ImageView
+    android:id="@+id/verim"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_centerHorizontal="true"
+    android:layout_above="@id/veer"
+    android:paddingBottom="10dp"
+
+    android:src="@drawable/edit__6_"
+    />
+
+    </RelativeLayout>
 
 </LinearLayout>
