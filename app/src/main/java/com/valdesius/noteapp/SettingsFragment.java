@@ -61,6 +61,7 @@ public class SettingsFragment extends Fragment {
     private TextView fontStyleText;
 
     private TextView textVersion;
+
     @SuppressLint("MissingInflatedId")
     @Nullable
     @Override
@@ -73,7 +74,7 @@ public class SettingsFragment extends Fragment {
             editor.apply();
         }
 
-textVersion = view.findViewById(R.id.veer);
+        textVersion = view.findViewById(R.id.veer);
         resetListSwitch = view.findViewById(R.id.resetListSwitch);
         resetText = view.findViewById(R.id.resetListText);
         SharedPreferences preferences3 = PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -200,6 +201,7 @@ textVersion = view.findViewById(R.id.veer);
         super.onPause();
         saveSpinnerStates();
     }
+
     private void updateToolbarColor() {
         Toolbar toolbar = getActivity().findViewById(R.id.toolbar);
         if (toolbar != null) {
@@ -287,6 +289,7 @@ textVersion = view.findViewById(R.id.veer);
             fontStyleSpinner.setSelection(fontStylePosition);
         }
     }
+
     private void updateSearchViewIcon() {
         if (searchView != null) {
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());

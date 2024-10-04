@@ -2,13 +2,18 @@ package com.valdesius.noteapp;
 
 import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.WindowInsetsController;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -31,10 +36,37 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         boolean isNightMode = preferences.getBoolean("isNightMode", true);
 
+
         if (isNightMode) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                getWindow().setNavigationBarColor(getResources().getColor(R.color.colorPrimaryDark));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    WindowInsetsController controller = getWindow().getInsetsController();
+                    if (controller != null) {
+                        controller.setSystemBarsAppearance(
+                                WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                                WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+                        );
+                    }
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    getWindow().setNavigationBarColor(getResources().getColor(R.color.grey));
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        getWindow().setNavigationBarDividerColor(getResources().getColor(R.color.grey));
+                    }
+                    getWindow().getDecorView().setSystemUiVisibility(
+                            getWindow().getDecorView().getSystemUiVisibility() & ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                    );
+                }
+
+
+
+            }
         } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                getWindow().setNavigationBarColor(getResources().getColor(R.color.white));
+            }
         }
         SharedPreferences preferences2 = PreferenceManager.getDefaultSharedPreferences(this);
         if (!preferences.contains("firstLaunchDate")) {

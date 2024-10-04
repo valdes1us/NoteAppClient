@@ -26,6 +26,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -109,6 +110,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
     private Calendar selectedDateTime;
 
     private static final int REQUEST_CALENDAR_PERMISSION = 100;
+
 
     private void resetListCounterIfNeeded() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -204,6 +206,39 @@ public class NoteDetailsActivity extends AppCompatActivity {
                 }
             }
         });
+
+
+        if (isNightMode) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                getWindow().setNavigationBarColor(getResources().getColor(R.color.colorPrimaryDark));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    WindowInsetsController controller = getWindow().getInsetsController();
+                    if (controller != null) {
+                        controller.setSystemBarsAppearance(
+                                WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                                WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+                        );
+                    }
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    getWindow().setNavigationBarColor(getResources().getColor(R.color.grey));
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        getWindow().setNavigationBarDividerColor(getResources().getColor(R.color.grey));
+                    }
+                    getWindow().getDecorView().setSystemUiVisibility(
+                            getWindow().getDecorView().getSystemUiVisibility() & ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                    );
+                }
+
+
+
+            }
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                getWindow().setNavigationBarColor(getResources().getColor(R.color.white));
+            }
+        }
 
         backButton = findViewById(R.id.back_button);
         toolbarTitleEditText = findViewById(R.id.toolbarTitleEditText);
