@@ -40,6 +40,7 @@ import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.DatePicker;
@@ -49,6 +50,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -129,8 +131,12 @@ public class NoteDetailsActivity extends AppCompatActivity {
 
     private ImageView spisokButton;
     private LinearLayout todoContainer;
+    private LinearLayout collapsedTodoContainer;
 
 
+    private Spinner checkedItemsSpinner;
+    private ArrayAdapter<String> checkedItemsAdapter;
+    private List<String> checkedItemsList;
     private void resetListCounterIfNeeded() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         boolean resetList = preferences.getBoolean("resetList", false);
@@ -171,6 +177,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
 
             // Устанавливаем курсор в конец текста
             contentEditText.setSelection(contentEditText.getText().length());
+            contentEditText.setText("Список");
         }
     }
 
@@ -178,6 +185,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
         View todoItem = getLayoutInflater().inflate(R.layout.item_todo, null);
         EditText todoText = todoItem.findViewById(R.id.todo_text);
         ImageView deleteButton = todoItem.findViewById(R.id.delete_button);
+        CheckBox checkBox = todoItem.findViewById(R.id.todo_checkbox); // Добавьте CheckBox
 
         todoText.setText(text);
 
@@ -192,6 +200,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
                 if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
                     // Создаем новый элемент списка дел
                     createNewTodoItem(todoText);
+                    contentEditText.setText("Список");
                     return true;
                 }
                 return false;
@@ -215,6 +224,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
         todoText.requestFocus();
         todoText.setSelection(todoText.getText().length());
     }
+
 
     private void createNewTodoItem(EditText currentTodoText) {
         String newText = currentTodoText.getText().toString();
@@ -416,6 +426,8 @@ public class NoteDetailsActivity extends AppCompatActivity {
                 showBackgroundColorPicker();
             }
         });
+
+
 
         calendarButton = findViewById(R.id.calendar_button);
         calendarButton.setOnClickListener(new View.OnClickListener() {
@@ -764,6 +776,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
         String title = toolbarTitleEditText.getText().toString().trim();
         String content = contentEditText.getText().toString().trim();
         String todoList = getTodoListAsJson(); // Преобразуйте список дел в JSON
+        String todoCheckboxStates = getTodoCheckboxStatesAsJson(); // Преобразуйте состояние CheckBox в JSON
 
         if (title.isEmpty()) {
             title = "Заметка ";
@@ -779,9 +792,9 @@ public class NoteDetailsActivity extends AppCompatActivity {
 
         Note note;
         if (noteId != -1) {
-            note = new Note(noteId, title, content, currentBackgroundColor, currentFontColor, currentFontSize, currentFontStyle, todoList);
+            note = new Note(noteId, title, content, currentBackgroundColor, currentFontColor, currentFontSize, currentFontStyle, todoList, todoCheckboxStates);
         } else {
-            note = new Note(title, content, currentBackgroundColor, currentFontColor, currentFontSize, currentFontStyle, todoList);
+            note = new Note(title, content, currentBackgroundColor, currentFontColor, currentFontSize, currentFontStyle, todoList, todoCheckboxStates);
         }
 
         new Thread(() -> {
@@ -797,6 +810,18 @@ public class NoteDetailsActivity extends AppCompatActivity {
             });
         }).start();
     }
+
+    private String getTodoCheckboxStatesAsJson() {
+        // Преобразуйте состояние CheckBox в JSON
+        List<Boolean> checkboxStates = new ArrayList<>();
+        for (int i = 0; i < todoContainer.getChildCount(); i++) {
+            View view = todoContainer.getChildAt(i);
+            CheckBox checkBox = view.findViewById(R.id.todo_checkbox);
+            checkboxStates.add(checkBox.isChecked());
+        }
+        return new Gson().toJson(checkboxStates);
+    }
+
 
 
 
@@ -830,10 +855,24 @@ public class NoteDetailsActivity extends AppCompatActivity {
                     if (note.getTodoList() != null) {
                         loadTodoListFromJson(note.getTodoList());
                     }
+                    if (note.getTodoCheckboxStates() != null) {
+                        loadTodoCheckboxStatesFromJson(note.getTodoCheckboxStates());
+                    }
                 }
             });
         }).start();
     }
+
+    private void loadTodoCheckboxStatesFromJson(String json) {
+        // Загрузите состояние CheckBox из JSON
+        List<Boolean> checkboxStates = new Gson().fromJson(json, new TypeToken<List<Boolean>>() {}.getType());
+        for (int i = 0; i < todoContainer.getChildCount(); i++) {
+            View view = todoContainer.getChildAt(i);
+            CheckBox checkBox = view.findViewById(R.id.todo_checkbox);
+            checkBox.setChecked(checkboxStates.get(i));
+        }
+    }
+
 
     private String getTodoListAsJson() {
         // Преобразуйте список дел в JSON

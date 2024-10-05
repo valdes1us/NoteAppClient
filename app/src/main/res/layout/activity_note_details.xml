@@ -82,6 +82,18 @@
                 android:orientation="vertical"
                 android:padding="8dp" />
 
+
+
+            <!-- Контейнер для свернутых элементов списка дел -->
+            <LinearLayout
+                android:id="@+id/collapsed_todo_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="8dp"
+                android:visibility="gone" />
+
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

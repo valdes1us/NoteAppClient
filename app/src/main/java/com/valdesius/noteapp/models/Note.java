@@ -15,10 +15,11 @@ public class Note {
     private String fontStyle;
     private String drawingPath;
     private String todoList; // Новое поле для списка дел
+    private String todoCheckboxStates; // Новое поле для состояния CheckBox
 
     // Конструкторы, геттеры и сеттеры
 
-    public Note(int note_id, String title, String content, String backgroundColor, String fontColor, float fontSize, String fontStyle, String todoList) {
+    public Note(int note_id, String title, String content, String backgroundColor, String fontColor, float fontSize, String fontStyle, String todoList, String todoCheckboxStates) {
         this.note_id = note_id;
         this.title = title;
         this.content = content;
@@ -27,9 +28,10 @@ public class Note {
         this.fontSize = fontSize;
         this.fontStyle = fontStyle;
         this.todoList = todoList;
+        this.todoCheckboxStates = todoCheckboxStates;
     }
 
-    public Note(String title, String content, String backgroundColor, String fontColor, float fontSize, String fontStyle, String todoList) {
+    public Note(String title, String content, String backgroundColor, String fontColor, float fontSize, String fontStyle, String todoList, String todoCheckboxStates) {
         this.title = title;
         this.content = content;
         this.backgroundColor = backgroundColor;
@@ -37,6 +39,7 @@ public class Note {
         this.fontSize = fontSize;
         this.fontStyle = fontStyle;
         this.todoList = todoList;
+        this.todoCheckboxStates = todoCheckboxStates;
     }
 
     public Note() {
@@ -114,5 +117,13 @@ public class Note {
 
     public void setTodoList(String todoList) {
         this.todoList = todoList;
+    }
+
+    public String getTodoCheckboxStates() {
+        return todoCheckboxStates;
+    }
+
+    public void setTodoCheckboxStates(String todoCheckboxStates) {
+        this.todoCheckboxStates = todoCheckboxStates;
     }
 }
