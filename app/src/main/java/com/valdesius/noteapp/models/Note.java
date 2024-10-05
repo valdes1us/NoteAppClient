@@ -12,12 +12,13 @@ public class Note {
     private String backgroundColor;
     private String fontColor;
     private float fontSize;
-    private String fontStyle; // Новое поле для стиля шрифта
+    private String fontStyle;
     private String drawingPath;
+    private String todoList; // Новое поле для списка дел
 
     // Конструкторы, геттеры и сеттеры
 
-    public Note(int note_id, String title, String content, String backgroundColor, String fontColor, float fontSize, String fontStyle) {
+    public Note(int note_id, String title, String content, String backgroundColor, String fontColor, float fontSize, String fontStyle, String todoList) {
         this.note_id = note_id;
         this.title = title;
         this.content = content;
@@ -25,20 +26,23 @@ public class Note {
         this.fontColor = fontColor;
         this.fontSize = fontSize;
         this.fontStyle = fontStyle;
+        this.todoList = todoList;
     }
 
-    public Note(String title, String content, String backgroundColor, String fontColor, float fontSize, String fontStyle) {
+    public Note(String title, String content, String backgroundColor, String fontColor, float fontSize, String fontStyle, String todoList) {
         this.title = title;
         this.content = content;
         this.backgroundColor = backgroundColor;
         this.fontColor = fontColor;
         this.fontSize = fontSize;
         this.fontStyle = fontStyle;
+        this.todoList = todoList;
     }
 
     public Note() {
     }
-    // Добавьте другие конструкторы, если необходимо
+
+    // Геттеры и сеттеры
 
     public int getNote_id() {
         return note_id;
@@ -102,5 +106,13 @@ public class Note {
 
     public void setDrawingPath(String drawingPath) {
         this.drawingPath = drawingPath;
+    }
+
+    public String getTodoList() {
+        return todoList;
+    }
+
+    public void setTodoList(String todoList) {
+        this.todoList = todoList;
     }
 }

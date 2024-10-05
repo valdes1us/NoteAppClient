@@ -30,6 +30,7 @@ import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.text.style.ImageSpan;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -39,9 +40,12 @@ import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
@@ -61,6 +65,8 @@ import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.widget.NestedScrollView;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.valdesius.noteapp.helpers.ClickableImageSpan;
 import com.valdesius.noteapp.helpers.FontSizeAdapter;
 import com.valdesius.noteapp.helpers.FontStyleAdapter;
@@ -74,6 +80,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -121,6 +128,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
     private static final int REQUEST_CALENDAR_PERMISSION = 100;
 
     private ImageView spisokButton;
+    private LinearLayout todoContainer;
 
 
     private void resetListCounterIfNeeded() {
@@ -136,6 +144,85 @@ public class NoteDetailsActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR}, REQUEST_CALENDAR_PERMISSION);
         }
     }
+
+
+
+
+    private void handleSelectedText() {
+        int start = contentEditText.getSelectionStart();
+        int end = contentEditText.getSelectionEnd();
+
+        if (start > end) {
+            int temp = start;
+            start = end;
+            end = temp;
+        }
+
+        if (start < 0 || end < 0) {
+            return;
+        }
+
+        String selectedText = contentEditText.getText().toString().substring(start, end);
+        if (!selectedText.isEmpty()) {
+            addTodoItem(selectedText);
+
+            // Удаляем выделенный текст из contentEditText
+            contentEditText.getText().delete(start, end);
+
+            // Устанавливаем курсор в конец текста
+            contentEditText.setSelection(contentEditText.getText().length());
+        }
+    }
+
+    private void addTodoItem(String text) {
+        View todoItem = getLayoutInflater().inflate(R.layout.item_todo, null);
+        EditText todoText = todoItem.findViewById(R.id.todo_text);
+        ImageView deleteButton = todoItem.findViewById(R.id.delete_button);
+
+        todoText.setText(text);
+
+        // Добавьте элемент списка дел в ваш контейнер (например, LinearLayout)
+        LinearLayout todoContainer = findViewById(R.id.todo_container);
+        todoContainer.addView(todoItem);
+
+        // Добавляем обработчик событий для EditText
+        todoText.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
+                    // Создаем новый элемент списка дел
+                    createNewTodoItem(todoText);
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        // Добавляем обработчик событий для кнопки "Удалить"
+        deleteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Удаляем элемент списка дел
+                todoContainer.removeView(todoItem);
+
+                // Устанавливаем фокус на contentEditText
+                contentEditText.requestFocus();
+                contentEditText.setSelection(contentEditText.getText().length());
+            }
+        });
+
+        // Устанавливаем фокус на текущий элемент списка дел
+        todoText.requestFocus();
+        todoText.setSelection(todoText.getText().length());
+    }
+
+    private void createNewTodoItem(EditText currentTodoText) {
+        String newText = currentTodoText.getText().toString();
+        if (!newText.isEmpty()) {
+            addTodoItem(""); // Создаем новый пустой элемент списка дел
+        }
+    }
+
 
 
 
@@ -157,7 +244,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
         }
 
         boolean isNightMode = preferences.getBoolean("isNightMode", true);
-
+        todoContainer = findViewById(R.id.todo_container);
         if (isNightMode) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         } else {
@@ -183,12 +270,7 @@ public class NoteDetailsActivity extends AppCompatActivity {
         spisokButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                int start = contentEditText.getSelectionStart();
-                int end = contentEditText.getSelectionEnd();
-                if (start != end) {
-                    String selectedText = contentEditText.getText().toString().substring(start, end);
-
-                }
+                handleSelectedText();
             }
         });
 
@@ -681,21 +763,25 @@ public class NoteDetailsActivity extends AppCompatActivity {
     private void saveNote() {
         String title = toolbarTitleEditText.getText().toString().trim();
         String content = contentEditText.getText().toString().trim();
+        String todoList = getTodoListAsJson(); // Преобразуйте список дел в JSON
 
         if (title.isEmpty()) {
             title = "Заметка ";
         }
 
-        if (content.isEmpty()) {
-            Toast.makeText(this, "Введите текст заметки", Toast.LENGTH_SHORT).show();
+        // Проверяем, есть ли элементы в списке дел
+        boolean hasTodoItems = todoContainer.getChildCount() > 0;
+
+        if (content.isEmpty() && !hasTodoItems) {
+            Toast.makeText(this, "Введите текст заметки или добавьте элементы в список дел", Toast.LENGTH_SHORT).show();
             return;
         }
 
         Note note;
         if (noteId != -1) {
-            note = new Note(noteId, title, content, currentBackgroundColor, currentFontColor, currentFontSize, currentFontStyle);
+            note = new Note(noteId, title, content, currentBackgroundColor, currentFontColor, currentFontSize, currentFontStyle, todoList);
         } else {
-            note = new Note(title, content, currentBackgroundColor, currentFontColor, currentFontSize, currentFontStyle);
+            note = new Note(title, content, currentBackgroundColor, currentFontColor, currentFontSize, currentFontStyle, todoList);
         }
 
         new Thread(() -> {
@@ -711,6 +797,9 @@ public class NoteDetailsActivity extends AppCompatActivity {
             });
         }).start();
     }
+
+
+
 
     private void loadNote() {
         new Thread(() -> {
@@ -738,10 +827,36 @@ public class NoteDetailsActivity extends AppCompatActivity {
                         currentFontStyle = note.getFontStyle();
                         applyFontStyle(currentFontStyle);
                     }
+                    if (note.getTodoList() != null) {
+                        loadTodoListFromJson(note.getTodoList());
+                    }
                 }
             });
         }).start();
     }
+
+    private String getTodoListAsJson() {
+        // Преобразуйте список дел в JSON
+        List<String> todoItems = new ArrayList<>();
+        for (int i = 0; i < todoContainer.getChildCount(); i++) {
+            View view = todoContainer.getChildAt(i);
+            EditText todoText = view.findViewById(R.id.todo_text);
+            todoItems.add(todoText.getText().toString());
+        }
+        return new Gson().toJson(todoItems);
+    }
+
+    private void loadTodoListFromJson(String json) {
+        // Загрузите список дел из JSON
+        List<String> todoItems = new Gson().fromJson(json, new TypeToken<List<String>>() {}.getType());
+        todoContainer.removeAllViews();
+        for (String item : todoItems) {
+            addTodoItem(item);
+        }
+    }
+
+
+
 
     private void showColorPickerDialog(final boolean isBackgroundColor) {
         final int[] selectedColor = {Color.BLACK};

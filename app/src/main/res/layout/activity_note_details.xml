@@ -10,7 +10,6 @@
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
-
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
@@ -50,7 +49,6 @@
     <androidx.core.widget.NestedScrollView
         android:id="@+id/nestedScrollView"
         android:layout_width="match_parent"
-
         android:layout_height="wrap_content"
         android:layout_above="@id/toolbar_bottom"
         android:layout_below="@id/toolbar"
@@ -76,6 +74,13 @@
                 android:textIsSelectable="true"
                 android:textColorHint="#CCCCCC" />
 
+            <!-- Контейнер для списка дел -->
+            <LinearLayout
+                android:id="@+id/todo_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="8dp" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
@@ -92,7 +97,6 @@
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-
             android:scrollbars="none">
 
             <LinearLayout
@@ -112,12 +116,11 @@
                     android:layout_marginEnd="16dp" />
                 <ImageView
                     android:id="@+id/spisok"
-                    android:visibility="gone"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:src="@drawable/text_size_svgrepo_com__3_"
+                    android:src="@drawable/list_svgrepo_com__2_"
                     android:contentDescription="Иконка 1"
-                    android:paddingStart="10dp"
+
                     android:layout_marginEnd="16dp" />
                 <ImageView
                     android:id="@+id/color_change"
@@ -133,7 +136,7 @@
                     android:layout_height="wrap_content"
                     android:src="@drawable/feather_svgrepo_com__3_"
                     android:contentDescription="Иконка 2"
-                    android:layout_marginEnd="16dp" />
+                    android:layout_marginEnd="8dp" />
 
                 <ImageView
                     android:id="@+id/list_create"
@@ -141,7 +144,7 @@
                     android:layout_height="wrap_content"
                     android:src="@drawable/list_ordered_svgrepo_com2"
                     android:contentDescription="Иконка 1"
-                    android:layout_marginEnd="16dp" />
+                    android:layout_marginEnd="8dp" />
 
                 <ImageView
                     android:id="@+id/voice_record"
@@ -150,7 +153,7 @@
                     android:src="@drawable/mic_svgrepo_com"
                     android:layout_centerHorizontal="true"
                     android:contentDescription="Запись голоса"
-                    android:layout_marginEnd="16dp" />
+                    android:layout_marginEnd="8dp" />
                 <ImageView
                     android:id="@+id/bg_change"
                     android:layout_width="wrap_content"
@@ -174,7 +177,7 @@
                     android:src="@drawable/share_svgrepo_com__1_"
                     android:contentDescription="Иконка 1"
                     android:layout_marginEnd="10dp"
-                     />
+                    />
             </LinearLayout>
         </HorizontalScrollView>
     </RelativeLayout>

@@ -77,6 +77,8 @@ public class HomeFragment extends Fragment implements OnThemeChangeListener{
     private BottomNavigationView bottomNavigationView;
     private FrameLayout fragmentContainer;
 
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
